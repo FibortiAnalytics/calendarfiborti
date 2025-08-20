@@ -1,0 +1,21 @@
+/*
+Theme Name: Mi Tema Bootstrap
+Description: Tema básico de WordPress con Bootstrap 5.3.7
+Author: Tu Nombre
+Version: 1.0
+License: GPL v2 or later
+*/
+
+/* Estilos personalizados adicionales */
+.navbar-brand {
+    font-weight: bold;
+}
+
+.content-area {
+    min-height: 70vh;
+}
+
+.footer-area {
+    background-color: #f8f9fa;
+    margin-top: 2rem;
+}
