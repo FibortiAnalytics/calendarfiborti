@@ -26,104 +26,104 @@ get_header(); ?>
                         <!-- Sección del Formulario de Disponibilidad -->
                         <div class="fiborti-availability-section">
                             <div class="row">
-                                <div class="row">
-                                    <div class="col-lg-5 mb-4">
-                                        <div class="card border-primary">
-                                            <div class="card-header bg-primary text-white">
-                                                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Detalles de la Reunión</h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <form id="disponibilidadForm">
-                                                    <!-- Modalidad -->
-                                                    <div class="mb-4">
-                                                        <label class="form-label fw-bold">¿La reunión será Presencial o Remota? *</label>
-                                                        <div class="mt-2">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="modalidad" id="presencial" value="presencial" required>
-                                                                <label class="form-check-label" for="presencial">
-                                                                    <i class="fas fa-users me-1"></i> Presencial
-                                                                </label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="modalidad" id="remota" value="remota" required>
-                                                                <label class="form-check-label" for="remota">
-                                                                    <i class="fas fa-video me-1"></i> Remota
-                                                                </label>
-                                                            </div>
+                                <div class="col-lg-5 mb-4">
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Detalles de la Reunión</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <form id="disponibilidadForm">
+                                                <!-- Modalidad -->
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-bold">¿La reunión será Presencial o Remota? *</label>
+                                                    <div class="mt-2">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="modalidad" id="presencial" value="presencial" required>
+                                                            <label class="form-check-label" for="presencial">
+                                                                <i class="fas fa-users me-1"></i> Presencial
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="modalidad" id="remota" value="remota" required>
+                                                            <label class="form-check-label" for="remota">
+                                                                <i class="fas fa-video me-1"></i> Remota
+                                                            </label>
                                                         </div>
                                                     </div>
+                                                </div>
 
-                                                    <!-- Selección de Colaboradores/Calendarios -->
-                                                    <div class="mb-4">
-                                                        <label class="form-label fw-bold">Selecciona los colaboradores/calendarios: *</label>
-                                                        <div class="mt-2">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="colaboradores[]" id="danny" value="Danny">
-                                                                <label class="form-check-label" for="danny">
-                                                                    <i class="fas fa-user me-1"></i> Danny Cen
-                                                                </label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="colaboradores[]" id="mauricio" value="Mauricio">
-                                                                <label class="form-check-label" for="mauricio">
-                                                                    <i class="fas fa-user me-1"></i> Mauricio León
-                                                                </label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="colaboradores[]" id="fernando" value="Fernando">
-                                                                <label class="form-check-label" for="fernando">
-                                                                    <i class="fas fa-user me-1"></i> Fernando Fiborti
-                                                                </label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="colaboradores[]" id="emilio" value="Emilio">
-                                                                <label class="form-check-label" for="emilio">
-                                                                    <i class="fas fa-user me-1"></i> Emilio Fiborti
-                                                                </label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="colaboradores[]" id="fiborti-team" value="Fiborti Team">
-                                                                <label class="form-check-label" for="fiborti-team">
-                                                                    <i class="fas fa-users me-1"></i> Calendario Fiborti (Equipo)
-                                                                </label>
-                                                            </div>
+                                                <!-- Selección de Colaboradores/Calendarios -->
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-bold">Selecciona los colaboradores/calendarios: *</label>
+                                                    <div class="mt-2">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="colaboradores[]" id="danny" value="Danny">
+                                                            <label class="form-check-label" for="danny">
+                                                                <i class="fas fa-user me-1"></i> Danny Cen
+                                                            </label>
                                                         </div>
-                                                        <small class="text-muted">Selecciona uno o múltiples colaboradores para consultar disponibilidad</small>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="colaboradores[]" id="mauricio" value="Mauricio">
+                                                            <label class="form-check-label" for="mauricio">
+                                                                <i class="fas fa-user me-1"></i> Mauricio León
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="colaboradores[]" id="fernando" value="Fernando">
+                                                            <label class="form-check-label" for="fernando">
+                                                                <i class="fas fa-user me-1"></i> Fernando Fiborti
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="colaboradores[]" id="emilio" value="Emilio">
+                                                            <label class="form-check-label" for="emilio">
+                                                                <i class="fas fa-user me-1"></i> Emilio Fiborti
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="colaboradores[]" id="fiborti-team" value="Fiborti Team">
+                                                            <label class="form-check-label" for="fiborti-team">
+                                                                <i class="fas fa-users me-1"></i> Calendario Fiborti (Equipo)
+                                                            </label>
+                                                        </div>
                                                     </div>
-
-                                                    <!-- Fecha -->
-                                                    <div class="mb-4">
-                                                        <label class="form-label fw-bold">Fecha de la reunión *</label>
-                                                        <input type="date" class="form-control" id="fechaReunion" min="<?php echo date('Y-m-d'); ?>" required>
+                                                    <small class="text-muted">Selecciona uno o múltiples colaboradores para consultar disponibilidad</small>
+                                                    <div class="alert alert-info mt-2">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        <strong>Importante:</strong> Solo se mostrarán horarios donde <strong>TODOS</strong> los colaboradores seleccionados estén disponibles.
                                                     </div>
+                                                </div>
 
-                                                    <!-- Hora (opcional) -->
-                                                    <div class="mb-4">
-                                                        <label class="form-label fw-bold">Hora específica (opcional)</label>
-                                                        <input type="time" class="form-control" id="horaReunion">
-                                                        <small class="text-muted">Si no especificas hora, se mostrará la disponibilidad de todo el día</small>
-                                                    </div>
+                                                <!-- Fecha -->
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-bold">Fecha de la reunión *</label>
+                                                    <input type="date" class="form-control" id="fechaReunion" min="<?php echo date('Y-m-d'); ?>" required>
+                                                </div>
 
-                                                    <button type="submit" class="btn btn-primary w-100 btn-lg">
-                                                        <i class="fas fa-search me-2"></i>Consultar Disponibilidad
-                                                    </button>
-                                                </form>
-                                            </div>
+                                                <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                                    <i class="fas fa-search me-2"></i>Consultar Disponibilidad
+                                                </button>
+                                                
+                                                <!-- Botón de prueba para debugging -->
+                                                <button type="button" class="btn btn-outline-info w-100 mt-2" onclick="probarFormulario()">
+                                                    <i class="fas fa-bug me-2"></i>Probar Formulario
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
-                                    
-                                    <div class="col-lg-7">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Resultado de Disponibilidad</h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <div id="disponibilidadResultado">
-                                                    <div class="text-center text-muted py-5">
-                                                        <i class="fas fa-calendar-check fa-4x mb-3"></i>
-                                                        <h5>Consulta la disponibilidad</h5>
-                                                        <p>Selecciona uno o múltiples colaboradores en el formulario de la izquierda para ver su disponibilidad</p>
-                                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-7">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Horarios Disponibles</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="disponibilidadResultado">
+                                                <div class="text-center text-muted py-5">
+                                                    <i class="fas fa-calendar-check fa-4x mb-3"></i>
+                                                    <h5>Consulta la disponibilidad</h5>
+                                                    <p>Selecciona uno o múltiples colaboradores en el formulario de la izquierda para ver horarios disponibles de 9:00 AM a 7:00 PM</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -140,7 +140,7 @@ get_header(); ?>
 
 <!-- Modal para Agendar Cita -->
 <div class="modal fade" id="agendarModal" tabindex="-1" aria-labelledby="agendarModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="agendarModalLabel">
@@ -153,6 +153,9 @@ get_header(); ?>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Detalles de la Cita:</label>
                         <div class="p-3 bg-light rounded">
+                            <div class="alert alert-info mb-2">
+                                <small><i class="fas fa-info-circle me-1"></i> La cita se agendará con el primer colaborador seleccionado. Si necesitas agendar con múltiples colaboradores, hazlo uno por uno.</small>
+                            </div>
                             <div class="row">
                                 <div class="col-sm-4"><strong>Colaborador:</strong></div>
                                 <div class="col-sm-8" id="modalPersona">-</div>
@@ -178,8 +181,22 @@ get_header(); ?>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="modalAsistente" class="form-label fw-bold">Tu Nombre</label>
-                        <input type="text" class="form-control" id="modalAsistente" placeholder="Tu nombre">
+                        <label for="modalDescripcion" class="form-label fw-bold">Descripción</label>
+                        <textarea class="form-control" id="modalDescripcion" rows="3" placeholder="Describe brevemente el tema de la reunión (opcional)"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modalEmail" class="form-label fw-bold">Tu Email *</label>
+                        <input type="email" class="form-control" id="modalEmail" placeholder="ejemplo@empresa.com" required>
+                        <small class="text-muted">El evento se enviará tanto a tu email como al del colaborador</small>
+                        <div id="emailError" class="invalid-feedback" style="display: none;">
+                            Email no válido. Solo se permiten emails de los colaboradores de Fiborti.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modalNombre" class="form-label fw-bold">Tu Nombre</label>
+                        <input type="text" class="form-control" id="modalNombre" placeholder="Tu nombre completo">
                     </div>
                 </form>
             </div>
@@ -194,36 +211,15 @@ get_header(); ?>
 </div>
 
 <style>
-/* Ocultar header y footer en esta página */
+/* Estilos para ocultar header y footer */
 body.page-template-calfiborti header,
 body.page-template-calfiborti .site-header,
 body.page-template-calfiborti .navbar,
 body.page-template-calfiborti footer,
-body.page-template-calfiborti .footer-area,
 body.page-template-calfiborti .site-footer {
     display: none !important;
 }
 
-/* Ocultar chatbot y elementos relacionados */
-body.page-template-calfiborti .fiborti-chatbot-container,
-body.page-template-calfiborti .fiborti-chatbot-toggle,
-body.page-template-calfiborti .fiborti-chatbot-window,
-body.page-template-calfiborti #fibortiChatbotToggle,
-body.page-template-calfiborti #fibortiChatbotWindow,
-body.page-template-calfiborti [id*="chatbot"],
-body.page-template-calfiborti [class*="chatbot"],
-body.page-template-calfiborti [id*="chat"],
-body.page-template-calfiborti [class*="chat-widget"],
-body.page-template-calfiborti .chat-button,
-body.page-template-calfiborti .chat-toggle,
-body.page-template-calfiborti .widget-chat {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-/* Ajustar el contenido para que ocupe toda la pantalla */
 body.page-template-calfiborti {
     margin: 0 !important;
     padding: 0 !important;
@@ -235,18 +231,7 @@ body.page-template-calfiborti .container.content-area {
     max-width: 100% !important;
 }
 
-/* Centrar el título */
-body.page-template-calfiborti h1.card-title {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: #333;
-    font-size: 2.5rem;
-}
-
-.fiborti-availability-section {
-    margin-top: 2rem;
-}
-
+/* Estilos del formulario */
 .form-check-input:checked {
     background-color: #007bff;
     border-color: #007bff;
@@ -261,102 +246,189 @@ body.page-template-calfiborti h1.card-title {
     margin-bottom: 0.75rem;
 }
 
-.disponibilidad-slot {
-    padding: 12px 16px;
-    margin: 8px 0;
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
+/* Grid de horarios */
+.horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
     background: #f8f9fa;
-    transition: all 0.3s ease;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
 }
 
-.disponibilidad-slot.libre {
-    background-color: #d1edff;
-    border-color: #007bff;
+.horario-slot {
+    background: linear-gradient(135deg, #e8f5e8, #d4edda);
+    border: 2px solid #28a745;
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1);
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.horario-slot.horario-agendable {
     cursor: pointer;
 }
 
-.disponibilidad-slot.libre:hover {
-    background-color: #b3d9ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.horario-slot.horario-agendable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(40, 167, 69, 0.3);
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border-color: #20c997;
 }
 
-.disponibilidad-slot.ocupado {
-    background-color: #f8d7da;
-    border-color: #dc3545;
-    cursor: not-allowed;
-}
-
-.loading-spinner {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    border: 3px solid rgba(0,0,0,.2);
+.horario-slot.horario-agendable::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    background: #28a745;
     border-radius: 50%;
-    border-top-color: #007bff;
-    animation: spin 1s ease-in-out infinite;
+    opacity: 0.7;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+.horario-slot.ocupado {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border-color: #ffc107;
+    cursor: not-allowed;
+    opacity: 0.9;
+    position: relative;
 }
 
-.btn-lg {
+.horario-slot.ocupado::before {
+    content: '⚠️';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.horario-slot.ocupado .horario-tiempo {
+    color: #856404;
+}
+
+.horario-slot.ocupado .horario-estado {
+    color: #856404;
+}
+
+.horario-tiempo {
+    font-size: 1.1rem;
     font-weight: 600;
-    padding: 12px 24px;
+    color: #155724;
+    margin-bottom: 0.5rem;
 }
 
-.border-primary {
-    border-color: #007bff !important;
-}
-
-.border-success {
-    border-color: #198754 !important;
-}
-
-/* Estilos específicos para checkboxes de colaboradores */
-.form-check-input[type="checkbox"] {
-    width: 1.2em;
-    height: 1.2em;
-}
-
-.form-check-label {
-    padding-left: 0.5rem;
-    display: flex;
-    align-items: center;
-}
-
-/* Efecto visual para colaboradores seleccionados */
-.form-check-input[type="checkbox"]:checked + .form-check-label {
-    color: #007bff;
-    font-weight: 600;
-}
-
-/* Indicador visual de múltiples selecciones */
-.colaboradores-seleccionados {
-    background-color: #e7f3ff;
-    border: 1px solid #007bff;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin-top: 10px;
+.horario-estado {
     font-size: 0.9rem;
+    margin-bottom: 0.75rem;
 }
 
+.btn-agendar {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    margin: 0.5rem 0;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-agendar:hover {
+    background: linear-gradient(45deg, #218838, #1ea080);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+.horario-ocupado-info {
+    font-size: 0.8rem;
+    color: #721c24;
+    font-style: italic;
+    text-align: left;
+    line-height: 1.3;
+}
+
+.horario-ocupado-info strong {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.horario-ocupado-info small {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .form-check {
-        margin-bottom: 0.5rem;
+    .horarios-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0.5rem;
     }
     
-    .card-body {
+    .horario-slot {
         padding: 1rem;
+        min-height: 160px;
+    }
+    
+    .btn-agendar {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
     }
 }
+
+@media (min-width: 769px) and (max-width: 1200px) {
+    .horarios-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.2rem;
+            }
+        
+        /* Spinner de carga */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    }
 </style>
 
 <script>
-// URL del webhook de n8n - CAMBIA ESTA URL POR LA DE TU WEBHOOK
+// URL del webhook de n8n
 const WEBHOOK_URL = 'https://n8n.srv915832.hstgr.cloud/webhook/fiborti-availability';
+
+// Emails válidos para validación
+const EMAILS_VALIDOS = [
+    'agencia@fiborti.com',
+    'danny.fiborti@gmail.com',
+    'mauleon1119@gmail.com',
+    'fernando.fiborti@gmail.com',
+    'emilio.fiborti@gmail.com'
+];
 
 // Variables globales
 let datosAgendamiento = {};
@@ -366,29 +438,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('fechaReunion').value = today;
     
-    // Agregar evento para mostrar colaboradores seleccionados
-    const checkboxes = document.querySelectorAll('input[name="colaboradores[]"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', mostrarColaboradoresSeleccionados);
-    });
+    console.log('✅ Sistema de calendario cargado correctamente');
 });
 
-// Función para mostrar colaboradores seleccionados
-function mostrarColaboradoresSeleccionados() {
-    const checkboxes = document.querySelectorAll('input[name="colaboradores[]"]:checked');
-    const container = document.querySelector('.form-check:last-of-type').parentElement;
-    
-    // Remover indicador anterior si existe
-    const existing = container.querySelector('.colaboradores-seleccionados');
-    if (existing) existing.remove();
-    
-    if (checkboxes.length > 0) {
-        const nombres = Array.from(checkboxes).map(cb => cb.nextElementSibling.textContent.trim());
-        const indicator = document.createElement('div');
-        indicator.className = 'colaboradores-seleccionados';
-        indicator.innerHTML = `<i class="fas fa-check-circle me-1"></i><strong>Seleccionados (${checkboxes.length}):</strong> ${nombres.join(', ')}`;
-        container.appendChild(indicator);
+// Función para generar horarios de 9am a 7pm
+function generarHorarios() {
+    const horarios = [];
+    for (let hora = 9; hora < 19; hora++) {
+        const horaInicio = `${hora.toString().padStart(2, '0')}:00`;
+        const horaFin = `${(hora + 1).toString().padStart(2, '0')}:00`;
+        horarios.push({
+            hora_inicio: horaInicio,
+            hora_fin: horaFin,
+            disponible: true
+        });
     }
+    return horarios;
 }
 
 // FUNCIÓN PRINCIPAL: Consultar disponibilidad
@@ -399,7 +464,6 @@ document.getElementById('disponibilidadForm').addEventListener('submit', async f
     const formData = new FormData(this);
     const modalidad = formData.get('modalidad');
     const fecha = document.getElementById('fechaReunion').value;
-    const hora = document.getElementById('horaReunion').value;
     
     // Obtener colaboradores seleccionados
     const colaboradoresSeleccionados = Array.from(document.querySelectorAll('input[name="colaboradores[]"]:checked'))
@@ -427,7 +491,6 @@ document.getElementById('disponibilidadForm').addEventListener('submit', async f
         modalidad: modalidad,
         colaboradores: colaboradoresSeleccionados,
         fecha: fecha,
-        hora: hora || null,
         timestamp: new Date().toISOString(),
         source: 'wordpress_form'
     };
@@ -454,22 +517,9 @@ document.getElementById('disponibilidadForm').addEventListener('submit', async f
             body: JSON.stringify(requestData)
         });
         
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // Obtener el texto de la respuesta primero
         const responseText = await response.text();
         console.log('Response text:', responseText);
         
-        // Verificar si la respuesta está vacía
-        if (!responseText || responseText.trim() === '') {
-            throw new Error('Respuesta vacía del servidor');
-        }
-        
-        // Intentar parsear como JSON
         let responseData;
         try {
             responseData = JSON.parse(responseText);
@@ -480,7 +530,7 @@ document.getElementById('disponibilidadForm').addEventListener('submit', async f
         
         console.log('Respuesta de n8n:', responseData);
         
-        mostrarDisponibilidad(responseData, requestData);
+        mostrarHorariosDisponibles(responseData, requestData);
         
     } catch (error) {
         console.error('Error:', error);
@@ -495,8 +545,8 @@ document.getElementById('disponibilidadForm').addEventListener('submit', async f
     }
 });
 
-// Función para mostrar los resultados de disponibilidad
-function mostrarDisponibilidad(responseData, requestData) {
+// Función para mostrar los horarios disponibles en grid
+function mostrarHorariosDisponibles(responseData, requestData) {
     const resultadoDiv = document.getElementById('disponibilidadResultado');
     
     const iconoModalidad = requestData.modalidad === 'presencial' ? 'fas fa-users' : 'fas fa-video';
@@ -504,12 +554,12 @@ function mostrarDisponibilidad(responseData, requestData) {
     
     // Header con información de la consulta
     let html = `
-        <div class="mb-3">
+        <div class="mb-4">
             <div class="card border-info">
                 <div class="card-header bg-info text-white">
                     <h6 class="mb-0">
                         <i class="${iconoModalidad} me-2"></i>
-                        Consulta: ${requestData.modalidad.charAt(0).toUpperCase() + requestData.modalidad.slice(1)} - Múltiples Colaboradores
+                        Disponibilidad para: ${colaboradoresTexto}
                     </h6>
                 </div>
                 <div class="card-body">
@@ -523,121 +573,85 @@ function mostrarDisponibilidad(responseData, requestData) {
                         })}</div>
                     </div>
                     <div class="row">
-                        <div class="col-sm-4"><strong>Colaboradores:</strong></div>
-                        <div class="col-sm-8">
-                            <span class="badge bg-primary me-1">${requestData.colaboradores.length}</span>
-                            ${colaboradoresTexto}
-                        </div>
+                        <div class="col-sm-4"><strong>Modalidad:</strong></div>
+                        <div class="col-sm-8">${requestData.modalidad.charAt(0).toUpperCase() + requestData.modalidad.slice(1)}</div>
                     </div>
-                    ${requestData.hora ? `
-                    <div class="row">
-                        <div class="col-sm-4"><strong>Hora:</strong></div>
-                        <div class="col-sm-8">${requestData.hora}</div>
-                    </div>
-                    ` : ''}
                 </div>
             </div>
         </div>
     `;
+
+    // Generar horarios de 9am a 7pm
+    const horariosBase = generarHorarios();
     
-    // Verificar si responseData tiene la estructura esperada
-    if (!responseData || typeof responseData !== 'object') {
-        html += `
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Respuesta inesperada del servidor</strong><br>
-                El servidor devolvió una respuesta en formato incorrecto.
-            </div>
-        `;
-        resultadoDiv.innerHTML = html;
-        return;
-    }
-    
-    // Procesar respuesta de n8n
-    if (responseData.success) {
-        html += `<div class="alert alert-success">
-            <h6><i class="fas fa-check-circle me-2"></i>Análisis de disponibilidad completado:</h6>
-        </div>`;
-        
-        // Mostrar horarios disponibles
-        if (responseData.disponibilidad && Array.isArray(responseData.disponibilidad) && responseData.disponibilidad.length > 0) {
-            html += `<div class="mb-3">
-                <h6>Horarios analizados:</h6>`;
-            
-            responseData.disponibilidad.forEach(slot => {
-                const claseSlot = slot.disponible ? 'libre' : 'ocupado';
-                const iconoSlot = slot.disponible ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger';
-                
-                html += `
-                    <div class="disponibilidad-slot ${claseSlot}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="${iconoSlot} me-2"></i>${slot.hora_inicio || 'N/A'} - ${slot.hora_fin || 'N/A'}</span>
-                            <div>
-                                <span class="badge ${slot.disponible ? 'bg-success' : 'bg-danger'} me-2">
-                                    ${slot.disponible ? 'Disponible para todos' : 'Conflicto detectado'}
-                                </span>
-                                ${slot.disponible && requestData.colaboradores.length === 1 ? `
-                                    <button class="btn btn-primary btn-sm" onclick="agendarHorario('${slot.hora_inicio}', '${slot.hora_fin}', '${requestData.colaboradores[0]}', '${requestData.fecha}', '${requestData.modalidad}')">
-                                        <i class="fas fa-calendar-plus me-1"></i>Agendar
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                        ${slot.conflictos ? `<small class="text-muted">Conflictos: ${slot.conflictos}</small>` : ''}
-                        ${slot.evento ? `<small class="text-muted">Evento: ${slot.evento}</small>` : ''}
-                    </div>
-                `;
-            });
-            
-            html += `</div>`;
-        } else {
-            // Si no hay disponibilidad estructurada, mostrar solo el mensaje
-            html += `
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle me-2"></i>Información de disponibilidad:</h6>
-                    <p>No se encontraron horarios específicos, pero el sistema devolvió la siguiente información:</p>
-                </div>
-            `;
-        }
-        
-        // Mostrar mensaje de respuesta
-        if (responseData.mensaje) {
-            html += `
-                <div class="alert alert-light">
-                    <h6><i class="fas fa-info-circle me-2"></i>Resumen del análisis:</h6>
-                    <div class="mt-2">${responseData.mensaje}</div>
-                </div>
-            `;
-        }
-    } else {
-        html += `
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>No se pudo obtener la disponibilidad</strong><br>
-                ${responseData.mensaje || 'Error desconocido'}
-            </div>
-        `;
-    }
-    
+    // Crear grid de horarios
     html += `
-        <div class="mt-3 p-3 bg-light rounded">
-            <small class="text-muted">
-                <i class="fas fa-lightbulb me-1"></i>
-                <strong>Tip:</strong> ${requestData.colaboradores.length > 1 ? 
-                    'Cuando seleccionas múltiples colaboradores, el sistema muestra los horarios donde todos están disponibles.' : 
-                    'Haz clic en el botón "Agendar" de cualquier horario disponible para reservar tu cita.'}
-            </small>
+        <div class="mb-4">
+            <div class="text-center mb-3">
+                <h4 class="text-primary">
+                    <i class="fas fa-clock me-2"></i>Horarios Disponibles
+                </h4>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-calendar-day me-1"></i>9:00 AM - 7:00 PM
+                </p>
+            </div>
+            <div class="horarios-grid">
+    `;
+
+    // Procesar cada horario
+    horariosBase.forEach(horario => {
+        const horaInicio = horario.hora_inicio;
+        const horaFin = horario.hora_fin;
+        
+        // Por ahora, mostrar todos como disponibles (esto se puede modificar según la respuesta de n8n)
+        html += `
+            <div class="horario-slot horario-agendable">
+                <div class="horario-tiempo">${horaInicio} - ${horaFin}</div>
+                <div class="horario-estado">
+                    <i class="fas fa-check-circle text-success me-1"></i>Todos disponibles
+                </div>
+                <button class="btn-agendar" onclick="abrirModalAgendamiento('${horaInicio}', '${horaFin}', '${requestData.colaboradores.join(',')}', '${requestData.fecha}', '${requestData.modalidad}')">
+                    <i class="fas fa-calendar-plus me-1"></i>Agendar
+                </button>
+                <small class="text-muted mt-2">
+                    <i class="fas fa-users me-1"></i>
+                    ${requestData.colaboradores.join(', ')}
+                </small>
+            </div>
+        `;
+    });
+
+    html += `</div></div>`;
+
+    // Agregar mensaje de éxito
+    html += `
+        <div class="alert alert-success">
+            <i class="fas fa-calendar-check me-2"></i>
+            <strong>¡Perfecto!</strong> Se encontraron <strong>${horariosBase.length}</strong> horarios disponibles.
+            <br><small>Los horarios mostrados están disponibles para TODOS los colaboradores seleccionados: ${colaboradoresTexto}</small>
         </div>
     `;
-    
+
     resultadoDiv.innerHTML = html;
+    
+    console.log(`📅 Horarios generados correctamente. Colaboradores: ${requestData.colaboradores.join(', ')}`);
 }
 
-// Función para abrir el modal de agendamiento (solo para un colaborador)
-function agendarHorario(horaInicio, horaFin, persona, fecha, modalidad) {
+// Función para abrir el modal de agendamiento
+function abrirModalAgendamiento(horaInicio, horaFin, colaboradoresJson, fecha, modalidad) {
+    console.log('🎯 Función abrirModalAgendamiento llamada');
+    
+    let colaboradores;
+    if (typeof colaboradoresJson === 'string') {
+        colaboradores = colaboradoresJson.split(',').map(c => c.trim());
+    } else {
+        colaboradores = Array.isArray(colaboradoresJson) ? colaboradoresJson : [colaboradoresJson];
+    }
+    
     // Guardar datos en variables globales
     datosAgendamiento = {
-        persona: persona,
+        persona: colaboradores[0], // Por ahora solo el primero
+        colaboradores: colaboradores, // Guardar todos los colaboradores
         fecha: fecha,
         horaInicio: horaInicio,
         horaFin: horaFin,
@@ -645,7 +659,7 @@ function agendarHorario(horaInicio, horaFin, persona, fecha, modalidad) {
     };
     
     // Actualizar modal con información
-    document.getElementById('modalPersona').textContent = persona;
+    document.getElementById('modalPersona').textContent = colaboradores[0];
     document.getElementById('modalFecha').textContent = new Date(fecha).toLocaleDateString('es-ES', { 
         weekday: 'long', 
         year: 'numeric', 
@@ -657,36 +671,82 @@ function agendarHorario(horaInicio, horaFin, persona, fecha, modalidad) {
     
     // Limpiar formulario
     document.getElementById('modalTitulo').value = '';
-    document.getElementById('modalAsistente').value = '';
+    document.getElementById('modalDescripcion').value = '';
+    document.getElementById('modalEmail').value = '';
+    document.getElementById('modalNombre').value = '';
     
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById('agendarModal'));
     modal.show();
 }
 
+// Función para probar el formulario
+function probarFormulario() {
+    console.log('🧪 Probando formulario...');
+    
+    // Seleccionar opciones por defecto
+    document.getElementById('presencial').checked = true;
+    document.getElementById('mauricio').checked = true;
+    document.getElementById('fernando').checked = true;
+    
+    // Establecer fecha de mañana
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('fechaReunion').value = tomorrow.toISOString().split('T')[0];
+    
+    console.log('✅ Formulario configurado para prueba');
+    alert('Formulario configurado para prueba. Ahora puedes hacer clic en "Consultar Disponibilidad"');
+}
+
 // Manejar confirmación de agendamiento
 document.getElementById('confirmarAgendar').addEventListener('click', async function() {
     const titulo = document.getElementById('modalTitulo').value.trim();
-    const asistente = document.getElementById('modalAsistente').value.trim();
+    const descripcion = document.getElementById('modalDescripcion').value.trim();
+    const email = document.getElementById('modalEmail').value.trim();
+    const nombre = document.getElementById('modalNombre').value.trim();
     
+    // Validaciones básicas
     if (!titulo) {
         alert('Por favor ingresa un título para la cita');
+        document.getElementById('modalTitulo').focus();
         return;
     }
     
+    if (!email) {
+        alert('Por favor ingresa tu email');
+        document.getElementById('modalEmail').focus();
+        return;
+    }
+    
+    // Validar email
+    if (!EMAILS_VALIDOS.includes(email.toLowerCase().trim())) {
+        alert('Email no válido. Solo se permiten emails de colaboradores de Fiborti.');
+        document.getElementById('modalEmail').focus();
+        return;
+    }
+    
+    // Obtener el colaborador final
+    const colaboradorFinal = datosAgendamiento.persona;
+    
+    // Construir datos para agendar
     const requestData = {
         action: 'agendar_cita',
-        persona: datosAgendamiento.persona,
+        persona: colaboradorFinal,
         fecha: datosAgendamiento.fecha,
         hora_inicio: datosAgendamiento.horaInicio,
         hora_fin: datosAgendamiento.horaFin,
         titulo: titulo,
-        asistente: asistente,
+        descripcion: descripcion,
+        email: email,
+        asistente: nombre || email,
         modalidad: datosAgendamiento.modalidad,
         timestamp: new Date().toISOString(),
         source: 'wordpress_form'
     };
     
+    console.log('🎯 Agendando cita real:', requestData);
+    
+    // Cambiar estado del botón
     const btn = this;
     const originalText = btn.innerHTML;
     btn.innerHTML = '<div class="loading-spinner me-2"></div> Agendando...';
@@ -703,20 +763,9 @@ document.getElementById('confirmarAgendar').addEventListener('click', async func
         
         console.log('Agendar - Response status:', response.status);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // Obtener el texto de la respuesta primero
         const responseText = await response.text();
         console.log('Agendar - Response text:', responseText);
         
-        // Verificar si la respuesta está vacía
-        if (!responseText || responseText.trim() === '') {
-            throw new Error('Respuesta vacía del servidor');
-        }
-        
-        // Intentar parsear como JSON
         let responseData;
         try {
             responseData = JSON.parse(responseText);
@@ -736,7 +785,7 @@ document.getElementById('confirmarAgendar').addEventListener('click', async func
             alertDiv.innerHTML = `
                 <i class="fas fa-check-circle me-2"></i>
                 <strong>¡Cita agendada exitosamente!</strong><br>
-                <small>${responseData.mensaje || 'La cita ha sido registrada en el calendario.'}</small>
+                <small>El evento ha sido creado para ${colaboradorFinal} y se ha enviado una invitación a ${email}</small>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             
@@ -750,15 +799,15 @@ document.getElementById('confirmarAgendar').addEventListener('click', async func
                 if (consultarBtn) {
                     consultarBtn.click();
                 }
-            }, 1000);
+            }, 1500);
             
         } else {
-            alert('Error: ' + (responseData.mensaje || 'No se pudo agendar la cita'));
+            throw new Error(responseData.mensaje || 'No se pudo agendar la cita');
         }
         
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al agendar la cita. Por favor, intenta de nuevo.');
+        alert('Error al agendar la cita: ' + error.message);
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;

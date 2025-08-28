@@ -13,7 +13,7 @@ function mi_tema_scripts() {
     wp_enqueue_style('theme-style', get_stylesheet_uri(), array('bootstrap-css'));
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js', array(), '5.3.7', true);
     
-    // Font Awesome para iconos (usado por el chatbot)
+    // Font Awesome para iconos
     wp_enqueue_style('fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
 }
 add_action('wp_enqueue_scripts', 'mi_tema_scripts');
@@ -82,9 +82,9 @@ function mi_tema_body_classes($classes) {
             $classes[] = 'fiborti-calendar-page';
         }
         
-        // Agregar clase para páginas con chatbot
-        if (get_option('fiborti_chatbot_enabled', '1') === '1') {
-            $classes[] = 'has-fiborti-chatbot';
+        // Clase para páginas del calendario Fiborti
+        if ($page_template == 'calfiborti.php') {
+            $classes[] = 'fiborti-calendar-page';
         }
     }
     
@@ -110,7 +110,7 @@ add_action('send_headers', 'mi_tema_security_headers');
 // Optimizar carga de jQuery para mejor compatibilidad
 function mi_tema_jquery_optimization() {
     if (!is_admin()) {
-        // Asegurar que jQuery esté disponible para el chatbot
+        // Asegurar que jQuery esté disponible para Bootstrap
         wp_enqueue_script('jquery');
     }
 }
@@ -144,7 +144,7 @@ function mi_tema_excerpt_more($more) {
 }
 add_filter('excerpt_more', 'mi_tema_excerpt_more');
 
-// Función helper para logging (útil para debug del chatbot)
+// Función helper para logging (útil para debug general)
 function mi_tema_log($message, $level = 'info') {
     if (WP_DEBUG === true) {
         if (is_array($message) || is_object($message)) {
@@ -170,15 +170,23 @@ function mi_tema_add_image_lazy_loading($content) {
 }
 add_filter('the_content', 'mi_tema_add_image_lazy_loading');
 
-// Hook para cuando se activa el plugin del chatbot
-function mi_tema_chatbot_activation_notice() {
-    if (class_exists('FibortiChatbot')) {
-        echo '<div class="notice notice-success is-dismissible">';
-        echo '<p><strong>¡Chatbot Fiborti activado!</strong> Visita <a href="' . admin_url('options-general.php?page=fiborti-chatbot') . '">Configuración → Fiborti Chatbot</a> para personalizar el chat.</p>';
-        echo '</div>';
-    }
+// Función para mostrar notificaciones del tema
+function mi_tema_admin_notices() {
+    // Aquí puedes agregar notificaciones del tema si las necesitas
 }
-add_action('admin_notices', 'mi_tema_chatbot_activation_notice');
+add_action('admin_notices', 'mi_tema_admin_notices');
+
+// Deshabilitar completamente el chatbot
+function mi_tema_disable_chatbot() {
+    // Eliminar cualquier opción del chatbot
+    delete_option('fiborti_chatbot_enabled');
+    delete_option('fiborti_chatbot_settings');
+    
+    // Asegurar que no se cargue
+    wp_dequeue_script('fiborti-chatbot');
+    wp_dequeue_style('fiborti-chatbot');
+}
+add_action('init', 'mi_tema_disable_chatbot');
 
 // Agregar estilos adicionales para mejor integración
 function mi_tema_inline_styles() {
@@ -214,6 +222,30 @@ function mi_tema_inline_styles() {
             .fiborti-calendar-page .card-body {
                 padding: 1rem;
             }
+        }
+        
+        /* Ocultar completamente cualquier elemento del chatbot */
+        .fiborti-chatbot-container,
+        .fiborti-chatbot-toggle,
+        .fiborti-chatbot-window,
+        #fibortiChatbotToggle,
+        #fibortiChatbotWindow,
+        [id*="chatbot"],
+        [class*="chatbot"],
+        [id*="chat"],
+        [class*="chat-widget"],
+        .chat-button,
+        .chat-toggle,
+        .widget-chat,
+        .chat-widget,
+        .chat-container {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
         }
         </style>
         <?php
