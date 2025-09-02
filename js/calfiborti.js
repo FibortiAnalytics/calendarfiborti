@@ -3,7 +3,7 @@
 // ===========================================
 
 // URL del webhook de n8n
-const WEBHOOK_URL = 'https://n8n.srv915832.hstgr.cloud/webhook-test/fiborti-availability-v2';
+const WEBHOOK_URL = 'https://n8n.srv915832.hstgr.cloud/webhook/fiborti-availability-v2';
 
 // Emails válidos para validación
 const EMAILS_VALIDOS = [
@@ -96,7 +96,17 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===========================================
 
 function validarDiaSegunModalidad(fecha, modalidad) {
-    const fechaObj = new Date(fecha);
+    // Parseo seguro de YYYY-MM-DD evitando desplazamientos por zona horaria
+    // Crear Date con componentes locales (año, mes, día)
+    let fechaObj;
+    if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        const [y, m, d] = fecha.split('-').map(Number);
+        fechaObj = new Date(y, m - 1, d, 12, 0, 0, 0); // mediodía local para evitar DST edge cases
+    } else if (fecha instanceof Date) {
+        fechaObj = fecha;
+    } else {
+        fechaObj = new Date(fecha);
+    }
     const dayOfWeek = fechaObj.getDay();
     const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     
@@ -299,7 +309,21 @@ document.getElementById('disponibilidadForm').addEventListener('submit', async f
 
 function mostrarHorariosDisponibles(responseData, requestData) {
     const resultadoDiv = document.getElementById('disponibilidadResultado');
-    const colaboradoresTexto = requestData.colaboradores.join(', ');
+    
+    // La respuesta ahora viene como array, tomar el primer elemento
+    const data = Array.isArray(responseData) ? responseData[0] : responseData;
+    
+    if (!data) {
+        resultadoDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> No se recibieron datos válidos del servidor
+            </div>
+        `;
+        return;
+    }
+    
+    const colaboradoresTexto = data.colaboradores ? data.colaboradores.join(', ') : 'N/A';
     
     let html = `
         <div class="mb-4">
@@ -310,37 +334,41 @@ function mostrarHorariosDisponibles(responseData, requestData) {
                 <div class="card-body">
                     <div class="row">
                         <div class="col-sm-4"><strong>Fecha:</strong></div>
-                        <div class="col-sm-8">${formatearFechaMexicana(requestData.fecha)}</div>
+                        <div class="col-sm-8">${formatearFechaMexicana(data.fecha)}</div>
                     </div>
                     <div class="row">
                         <div class="col-sm-4"><strong>Modalidad:</strong></div>
-                        <div class="col-sm-8">${requestData.modalidad.charAt(0).toUpperCase() + requestData.modalidad.slice(1)}${requestData.duracion ? ` (${requestData.duracion} min)` : ''}</div>
+                        <div class="col-sm-8">${data.modalidad.charAt(0).toUpperCase() + data.modalidad.slice(1)}${data.duracion ? ` (${data.duracion} min)` : ''}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4"><strong>Mensaje:</strong></div>
+                        <div class="col-sm-8">${data.mensaje || 'Sin mensaje'}</div>
                     </div>
                 </div>
             </div>
         </div>
     `;
 
-    if (!responseData.success) {
+    if (!data.success) {
         html += `
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <strong>Respuesta del sistema:</strong><br>
-                ${responseData.mensaje || 'No se pudo obtener la disponibilidad'}
+                ${data.mensaje || 'No se pudo obtener la disponibilidad'}
             </div>
         `;
         resultadoDiv.innerHTML = html;
         return;
     }
 
-    const horariosReales = responseData.disponibilidad || [];
+    const horariosReales = data.disponibilidad || [];
 
     if (horariosReales.length === 0) {
         html += `
             <div class="alert alert-info">
                 <i class="fas fa-info-circle me-2"></i>
                 <strong>No hay horarios disponibles</strong><br>
-                ${responseData.mensaje || 'No se encontraron horarios libres para la fecha seleccionada.'}
+                ${data.mensaje || 'No se encontraron horarios libres para la fecha seleccionada.'}
             </div>
         `;
         resultadoDiv.innerHTML = html;
@@ -360,6 +388,7 @@ function mostrarHorariosDisponibles(responseData, requestData) {
         const horaInicio = horario.hora_inicio || '09:00';
         const horaFin = horario.hora_fin || '10:00';
         const disponible = horario.disponible !== false;
+        const duracion = horario.duracion || data.duracion || 30;
         
         if (disponible) {
             html += `
@@ -367,9 +396,9 @@ function mostrarHorariosDisponibles(responseData, requestData) {
                     <div class="horario-tiempo">${formatearRangoHoraMexicana(horaInicio, horaFin)}</div>
                     <div class="horario-estado">
                         <i class="fas fa-check-circle text-success me-1"></i>
-                        Disponible confirmado
+                        Disponible confirmado (${duracion} min)
                     </div>
-                    <button class="btn-agendar" onclick="abrirModalAgendamiento('${horaInicio}', '${horaFin}', '${requestData.colaboradores.join(',')}', '${requestData.fecha}', '${requestData.modalidad}', '${requestData.duracion || ''}')">
+                    <button class="btn-agendar" onclick="abrirModalAgendamiento('${horaInicio}', '${horaFin}', '${data.colaboradores.join(',')}', '${data.fecha}', '${data.modalidad}', '${duracion}')">
                         <i class="fas fa-calendar-plus me-1"></i>Agendar Ahora
                     </button>
                 </div>
@@ -388,6 +417,48 @@ function mostrarHorariosDisponibles(responseData, requestData) {
     });
 
     html += `</div></div>`;
+    
+    // Agregar información de debug si está disponible
+    if (data.debug) {
+        html += `
+            <div class="mb-4">
+                <div class="card border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información de Debug</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <strong>Calendarios consultados:</strong><br>
+                                ${data.debug.calendarios ? data.debug.calendarios.join(', ') : 'N/A'}
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Eventos encontrados:</strong><br>
+                                ${data.debug.eventosTotal || 0} eventos
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <strong>Horario laboral:</strong><br>
+                                ${data.debug.horarioLaboral || 'N/A'}
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Duración de slots:</strong><br>
+                                ${data.debug.duracionSlot || 'N/A'}
+                            </div>
+                        </div>
+                        ${data.debug.slotsOcupados && data.debug.slotsOcupados.length > 0 ? `
+                            <div class="mt-2">
+                                <strong>Horarios ocupados:</strong><br>
+                                <small class="text-muted">${data.debug.slotsOcupados.join(', ')}</small>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
     resultadoDiv.innerHTML = html;
 }
 
@@ -409,6 +480,12 @@ function abrirModalAgendamiento(horaInicio, horaFin, colaboradores, fecha, modal
     }
     
     console.log('Modal encontrado:', modalElement);
+    
+    // Limpiar cuadros de debug anteriores del modal
+    const debugAgendarAnterior = document.getElementById('debugAgendar');
+    const debugRespuestaAgendarAnterior = document.getElementById('debugRespuestaAgendar');
+    if (debugAgendarAnterior) debugAgendarAnterior.remove();
+    if (debugRespuestaAgendarAnterior) debugRespuestaAgendarAnterior.remove();
     
     // Convertir string de colaboradores a array
     const colaboradoresArray = colaboradores.split(',').map(c => c.trim());
@@ -573,6 +650,32 @@ document.getElementById('confirmarAgendar').addEventListener('click', async func
     btn.innerHTML = '<div class="loading-spinner me-2"></div> Agendando...';
     btn.disabled = true;
     
+    // Mostrar JSON de agendamiento en el contenedor principal (debajo de otros debug)
+    const resultadoDivPrincipal = document.getElementById('disponibilidadResultado');
+    const debugAgendarDiv = document.createElement('div');
+    debugAgendarDiv.id = 'debugAgendar';
+    debugAgendarDiv.className = 'mb-4';
+    debugAgendarDiv.innerHTML = `
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0"><i class="fas fa-bug me-2"></i>Debug - Datos de Agendamiento</h6>
+            </div>
+            <div class="card-body">
+                <pre class="mb-0" style="font-size: 12px; max-height: 200px; overflow-y: auto;">${JSON.stringify(requestData, null, 2)}</pre>
+            </div>
+        </div>
+    `;
+    // Insertarlo después del debug de respuesta de disponibilidad si existe, si no, después del de enviados
+    const debugRespuesta = document.getElementById('debugRespuesta');
+    const debugEnviado = document.getElementById('debugEnviado');
+    if (debugRespuesta && debugRespuesta.nextSibling) {
+        debugRespuesta.parentNode.insertBefore(debugAgendarDiv, debugRespuesta.nextSibling);
+    } else if (debugEnviado && debugEnviado.nextSibling) {
+        debugEnviado.parentNode.insertBefore(debugAgendarDiv, debugEnviado.nextSibling);
+    } else {
+        resultadoDivPrincipal.parentNode.insertBefore(debugAgendarDiv, resultadoDivPrincipal.nextSibling);
+    }
+    
     try {
         const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
@@ -581,6 +684,27 @@ document.getElementById('confirmarAgendar').addEventListener('click', async func
         });
         
         const responseData = JSON.parse(await response.text());
+        
+        // Mostrar respuesta del webhook de agendamiento (debajo del debug de datos)
+        const debugRespuestaAgendarDiv = document.createElement('div');
+        debugRespuestaAgendarDiv.id = 'debugRespuestaAgendar';
+        debugRespuestaAgendarDiv.className = 'mb-4';
+        debugRespuestaAgendarDiv.innerHTML = `
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-reply me-2"></i>Debug - Respuesta de Agendamiento</h6>
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0" style="font-size: 12px; max-height: 200px; overflow-y: auto;">${JSON.stringify(responseData, null, 2)}</pre>
+                </div>
+            </div>
+        `;
+        const debugAgendarActual = document.getElementById('debugAgendar');
+        if (debugAgendarActual && debugAgendarActual.nextSibling) {
+            debugAgendarActual.parentNode.insertBefore(debugRespuestaAgendarDiv, debugAgendarActual.nextSibling);
+        } else if (debugAgendarActual) {
+            debugAgendarActual.parentNode.appendChild(debugRespuestaAgendarDiv);
+        }
         
         if (responseData.success) {
             cerrarModal();
