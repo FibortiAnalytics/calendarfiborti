@@ -19,3 +19,308 @@ License: GPL v2 or later
     background-color: #f8f9fa;
     margin-top: 2rem;
 }
+
+/* ===========================================
+   ESTILOS PARA CALENDARIO FIBORTI
+   =========================================== */
+
+/* Estilos para ocultar header y footer */
+body.page-template-calfiborti header,
+body.page-template-calfiborti .site-header,
+body.page-template-calfiborti .navbar,
+body.page-template-calfiborti footer,
+body.page-template-calfiborti .site-footer {
+    display: none !important;
+}
+
+body.page-template-calfiborti {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.page-template-calfiborti .container.content-area {
+    margin-top: 0 !important;
+    padding-top: 2rem !important;
+    max-width: 100% !important;
+}
+
+.form-check-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.form-check-label {
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.form-check {
+    margin-bottom: 0.75rem;
+}
+
+/* Estilos para la sección de duración */
+#duracionSection {
+    border: 2px solid #17a2b8;
+    border-radius: 8px;
+    padding: 1rem;
+    background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
+    transition: all 0.3s ease;
+}
+
+#duracionSection.visible {
+    animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilos para errores de validación */
+.error-validation {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border: 2px solid #dc3545;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+}
+
+.suggestion-buttons .btn {
+    margin: 0.25rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.suggestion-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Grid de horarios mejorado */
+.horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 16px;
+    border: 1px solid #dee2e6;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.horario-slot {
+    background: linear-gradient(135deg, #e8f5e8, #d4edda);
+    border: 2px solid #28a745;
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.15);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.horario-slot.horario-agendable {
+    cursor: pointer;
+}
+
+.horario-slot.horario-agendable:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(40, 167, 69, 0.3);
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border-color: #20c997;
+}
+
+.horario-slot.horario-agendable::before {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+.horario-slot.ocupado {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border-color: #ffc107;
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+
+.horario-slot.ocupado::before {
+    content: '⚠️';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.horario-tiempo {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #155724;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.horario-estado {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: #155724;
+}
+
+.btn-agendar {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    margin: 0.5rem 0;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-agendar:hover {
+    background: linear-gradient(45deg, #218838, #1ea080);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+.btn-agendar:active {
+    transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .horarios-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .horario-slot {
+        padding: 1.25rem;
+        min-height: 180px;
+    }
+    
+    .btn-agendar {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+    }
+    
+    .horario-tiempo {
+        font-size: 1.1rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+    .horarios-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.2rem;
+    }
+}
+
+/* Spinner de carga mejorado */
+.loading-spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #007bff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Modal manual (fallback cuando Bootstrap no está disponible) */
+.modal.show {
+    display: block !important;
+}
+
+.modal.show .modal-dialog {
+    transform: none !important;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.modal.show {
+    z-index: 1050;
+}
+
+/* Asegurar que el modal esté centrado */
+.modal.show .modal-dialog {
+    margin: 1.75rem auto;
+}
+
+/* Estilos para el modal cuando se muestra manualmente */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Alertas mejoradas */
+.alert {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f1b0b7);
+    color: #721c24;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    color: #0c5460;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #cce7ff, #b3daff);
+    color: #004085;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+}
