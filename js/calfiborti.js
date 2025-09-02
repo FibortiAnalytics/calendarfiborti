@@ -14,6 +14,15 @@ const EMAILS_VALIDOS = [
     'emilio.fiborti@gmail.com'
 ];
 
+// Mapeo de emails a nombres de colaboradores
+const EMAIL_TO_COLABORADOR = {
+    'agencia@fiborti.com': 'Fiborti Team',
+    'danny.fiborti@gmail.com': 'Danny',
+    'mauleon1119@gmail.com': 'Mauricio',
+    'fernando.fiborti@gmail.com': 'Fernando',
+    'emilio.fiborti@gmail.com': 'Emilio'
+};
+
 // Variable global para datos de agendamiento
 let datosAgendamiento = {};
 
@@ -238,10 +247,11 @@ document.getElementById('disponibilidadForm').addEventListener('submit', async f
         </div>
     `;
     
-    // Crear cuadro de debug permanente para datos enviados
+    // Crear cuadro de debug permanente para datos enviados (OCULTO PARA PRESENTACIÓN)
     const debugEnviadoDiv = document.createElement('div');
     debugEnviadoDiv.id = 'debugEnviado';
     debugEnviadoDiv.className = 'mb-4';
+    debugEnviadoDiv.style.display = 'none'; // OCULTO
     debugEnviadoDiv.innerHTML = `
         <div class="card border-warning">
             <div class="card-header bg-warning text-dark">
@@ -266,10 +276,11 @@ document.getElementById('disponibilidadForm').addEventListener('submit', async f
         const responseText = await response.text();
         const responseData = JSON.parse(responseText);
         
-        // Crear cuadro de debug permanente para respuesta del webhook
+        // Crear cuadro de debug permanente para respuesta del webhook (OCULTO PARA PRESENTACIÓN)
         const debugRespuestaDiv = document.createElement('div');
         debugRespuestaDiv.id = 'debugRespuesta';
         debugRespuestaDiv.className = 'mb-4';
+        debugRespuestaDiv.style.display = 'none'; // OCULTO
         debugRespuestaDiv.innerHTML = `
             <div class="card border-info">
                 <div class="card-header bg-info text-white">
@@ -418,10 +429,10 @@ function mostrarHorariosDisponibles(responseData, requestData) {
 
     html += `</div></div>`;
     
-    // Agregar información de debug si está disponible
+    // Agregar información de debug si está disponible (OCULTO PARA PRESENTACIÓN)
     if (data.debug) {
         html += `
-            <div class="mb-4">
+            <div class="mb-4" style="display: none;">
                 <div class="card border-secondary">
                     <div class="card-header bg-secondary text-white">
                         <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información de Debug</h6>
@@ -538,6 +549,27 @@ function abrirModalAgendamiento(horaInicio, horaFin, colaboradores, fecha, modal
     elementosModal.email.value = '';
     elementosModal.nombre.value = '';
     
+    // Agregar validación en tiempo real al campo email
+    elementosModal.email.addEventListener('input', function() {
+        const email = this.value.trim();
+        const emailErrorDiv = document.getElementById('emailError');
+        
+        if (email && EMAILS_VALIDOS.includes(email.toLowerCase())) {
+            const validacion = validarEmailVsColaboradores(email, colaboradoresArray);
+            if (!validacion.valido) {
+                this.classList.add('is-invalid');
+                emailErrorDiv.textContent = validacion.mensaje;
+                emailErrorDiv.style.display = 'block';
+            } else {
+                this.classList.remove('is-invalid');
+                emailErrorDiv.style.display = 'none';
+            }
+        } else {
+            this.classList.remove('is-invalid');
+            emailErrorDiv.style.display = 'none';
+        }
+    });
+    
     // Verificar si Bootstrap está disponible
     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
         console.log('Bootstrap disponible, usando Modal de Bootstrap');
@@ -610,6 +642,38 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ===========================================
+// VALIDACIÓN DE EMAIL VS COLABORADORES
+// ===========================================
+
+function validarEmailVsColaboradores(email, colaboradoresSeleccionados) {
+    const emailLower = email.toLowerCase();
+    
+    // Verificar si el email está en el mapeo
+    if (!EMAIL_TO_COLABORADOR[emailLower]) {
+        return {
+            valido: true, // Si no está en el mapeo, no hay conflicto
+            mensaje: null
+        };
+    }
+    
+    // Obtener el nombre del colaborador del email
+    const nombreColaborador = EMAIL_TO_COLABORADOR[emailLower];
+    
+    // Verificar si ese colaborador está seleccionado
+    if (colaboradoresSeleccionados.includes(nombreColaborador)) {
+        return {
+            valido: false,
+            mensaje: `No puedes agendar una cita contigo mismo. El email ${email} corresponde a ${nombreColaborador}, que está seleccionado en los colaboradores.`
+        };
+    }
+    
+    return {
+        valido: true,
+        mensaje: null
+    };
+}
+
+// ===========================================
 // CONFIRMACIÓN DE AGENDAMIENTO
 // ===========================================
 
@@ -626,6 +690,13 @@ document.getElementById('confirmarAgendar').addEventListener('click', async func
     
     if (!email || !EMAILS_VALIDOS.includes(email.toLowerCase())) {
         alert('Email no válido. Solo se permiten emails de colaboradores de Fiborti.');
+        return;
+    }
+    
+    // Validar que el email no coincida con colaboradores seleccionados
+    const validacionEmail = validarEmailVsColaboradores(email, datosAgendamiento.colaboradores);
+    if (!validacionEmail.valido) {
+        alert(validacionEmail.mensaje);
         return;
     }
     
@@ -650,11 +721,12 @@ document.getElementById('confirmarAgendar').addEventListener('click', async func
     btn.innerHTML = '<div class="loading-spinner me-2"></div> Agendando...';
     btn.disabled = true;
     
-    // Mostrar JSON de agendamiento en el contenedor principal (debajo de otros debug)
+    // Mostrar JSON de agendamiento en el contenedor principal (OCULTO PARA PRESENTACIÓN)
     const resultadoDivPrincipal = document.getElementById('disponibilidadResultado');
     const debugAgendarDiv = document.createElement('div');
     debugAgendarDiv.id = 'debugAgendar';
     debugAgendarDiv.className = 'mb-4';
+    debugAgendarDiv.style.display = 'none'; // OCULTO
     debugAgendarDiv.innerHTML = `
         <div class="card border-warning">
             <div class="card-header bg-warning text-dark">
@@ -685,10 +757,11 @@ document.getElementById('confirmarAgendar').addEventListener('click', async func
         
         const responseData = JSON.parse(await response.text());
         
-        // Mostrar respuesta del webhook de agendamiento (debajo del debug de datos)
+        // Mostrar respuesta del webhook de agendamiento (OCULTO PARA PRESENTACIÓN)
         const debugRespuestaAgendarDiv = document.createElement('div');
         debugRespuestaAgendarDiv.id = 'debugRespuestaAgendar';
         debugRespuestaAgendarDiv.className = 'mb-4';
+        debugRespuestaAgendarDiv.style.display = 'none'; // OCULTO
         debugRespuestaAgendarDiv.innerHTML = `
             <div class="card border-info">
                 <div class="card-header bg-info text-white">
