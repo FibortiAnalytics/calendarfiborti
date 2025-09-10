@@ -11,7 +11,10 @@ const EMAILS_VALIDOS = [
     'danny.fiborti@gmail.com',
     'mauleon1119@gmail.com',
     'fernando.fiborti@gmail.com',
-    'emilio.fiborti@gmail.com'
+    'emilio.fiborti@gmail.com',
+    'maximiliano.fiborti@gmail.com',
+    'mayte.fiborti@gmail.com',
+    'anthea.fiborti@gmail.com'
 ];
 
 // Mapeo de emails a nombres de colaboradores
@@ -20,7 +23,17 @@ const EMAIL_TO_COLABORADOR = {
     'danny.fiborti@gmail.com': 'Danny',
     'mauleon1119@gmail.com': 'Mauricio',
     'fernando.fiborti@gmail.com': 'Fernando',
-    'emilio.fiborti@gmail.com': 'Emilio'
+    'emilio.fiborti@gmail.com': 'Emilio',
+    'maximiliano.fiborti@gmail.com': 'Maximiliano',
+    'mayte.fiborti@gmail.com': 'Mayte',
+    'anthea.fiborti@gmail.com': 'Anthea'
+};
+
+// Mapeo especial para colaboradores que comparten emails pero tienen credenciales diferentes
+const COLABORADORES_ESPECIALES = {
+    'Maximiliano': 'maximiliano.fiborti@gmail.com',
+    'Anthea': 'anthea.fiborti@gmail.com', 
+    'Mayte': 'mayte.fiborti@gmail.com'
 };
 
 // Variable global para datos de agendamiento
@@ -648,23 +661,27 @@ document.addEventListener('DOMContentLoaded', function() {
 function validarEmailVsColaboradores(email, colaboradoresSeleccionados) {
     const emailLower = email.toLowerCase();
     
-    // Verificar si el email está en el mapeo
-    if (!EMAIL_TO_COLABORADOR[emailLower]) {
-        return {
-            valido: true, // Si no está en el mapeo, no hay conflicto
-            mensaje: null
-        };
+    // Verificar si el email está en el mapeo principal
+    if (EMAIL_TO_COLABORADOR[emailLower]) {
+        const nombreColaborador = EMAIL_TO_COLABORADOR[emailLower];
+        
+        // Verificar si ese colaborador está seleccionado
+        if (colaboradoresSeleccionados.includes(nombreColaborador)) {
+            return {
+                valido: false,
+                mensaje: `No puedes agendar una cita contigo mismo. El email ${email} corresponde a ${nombreColaborador}, que está seleccionado en los colaboradores.`
+            };
+        }
     }
     
-    // Obtener el nombre del colaborador del email
-    const nombreColaborador = EMAIL_TO_COLABORADOR[emailLower];
-    
-    // Verificar si ese colaborador está seleccionado
-    if (colaboradoresSeleccionados.includes(nombreColaborador)) {
-        return {
-            valido: false,
-            mensaje: `No puedes agendar una cita contigo mismo. El email ${email} corresponde a ${nombreColaborador}, que está seleccionado en los colaboradores.`
-        };
+    // Verificar colaboradores especiales que comparten emails
+    for (const [nombreColaborador, emailColaborador] of Object.entries(COLABORADORES_ESPECIALES)) {
+        if (emailLower === emailColaborador.toLowerCase() && colaboradoresSeleccionados.includes(nombreColaborador)) {
+            return {
+                valido: false,
+                mensaje: `No puedes agendar una cita contigo mismo. El email ${email} corresponde a ${nombreColaborador}, que está seleccionado en los colaboradores.`
+            };
+        }
     }
     
     return {
