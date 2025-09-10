@@ -6,13 +6,20 @@
 
 // Enqueue el archivo JavaScript específico para esta página
 function enqueue_calfiborti_scripts() {
-    wp_enqueue_script(
-        'calfiborti-js',
-        get_template_directory_uri() . '/js/calfiborti.js',
-        array(),
-        '1.0.0',
-        true
-    );
+    // Verificar que el archivo existe antes de cargarlo
+    $js_file_path = get_template_directory() . '/js/calfiborti.js';
+    if (file_exists($js_file_path)) {
+        wp_enqueue_script(
+            'calfiborti-js',
+            get_template_directory_uri() . '/js/calfiborti.js',
+            array('jquery', 'bootstrap-js'), // Dependencias correctas
+            filemtime($js_file_path), // Versión basada en fecha de modificación
+            true
+        );
+    } else {
+        // Log error si el archivo no existe
+        error_log('Error: Archivo calfiborti.js no encontrado en: ' . $js_file_path);
+    }
 }
 add_action('wp_enqueue_scripts', 'enqueue_calfiborti_scripts');
 

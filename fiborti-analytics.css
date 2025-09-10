@@ -1,0 +1,360 @@
+/* ===========================================
+   FIBORTI ANALYTICS - ESTILOS PRÓXIMAMENTE
+   =========================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body.fiborti-analytics-page {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ocultar completamente elementos de WordPress */
+body.fiborti-analytics-page #wpadminbar,
+body.fiborti-analytics-page .wp-site-blocks,
+body.fiborti-analytics-page .wp-block-group,
+body.fiborti-analytics-page .wp-block-template-part,
+body.fiborti-analytics-page .wp-block-group__inner-container,
+body.fiborti-analytics-page .wp-block-site-title,
+body.fiborti-analytics-page .wp-block-navigation,
+body.fiborti-analytics-page .wp-block-site-logo,
+body.fiborti-analytics-page .wp-block-query,
+body.fiborti-analytics-page .wp-block-post,
+body.fiborti-analytics-page .wp-block-post-content,
+body.fiborti-analytics-page .wp-block-post-title,
+body.fiborti-analytics-page .wp-block-post-excerpt,
+body.fiborti-analytics-page .wp-block-post-date,
+body.fiborti-analytics-page .wp-block-post-author,
+body.fiborti-analytics-page .wp-block-post-terms,
+body.fiborti-analytics-page .wp-block-post-featured-image,
+body.fiborti-analytics-page .wp-block-post-template,
+body.fiborti-analytics-page .wp-block-query-pagination,
+body.fiborti-analytics-page .wp-block-query-pagination-previous,
+body.fiborti-analytics-page .wp-block-query-pagination-next,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers,
+body.fiborti-analytics-page .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers .wp-block-query-pagination-numbers {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.fiborti-analytics-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, 
+        rgba(255, 107, 107, 0.3), 
+        rgba(238, 90, 36, 0.2), 
+        rgba(95, 39, 205, 0.3), 
+        rgba(52, 31, 151, 0.4), 
+        rgba(10, 189, 227, 0.2), 
+        rgba(0, 107, 166, 0.3)
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    z-index: 0;
+}
+
+body.fiborti-analytics-page::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(95, 39, 205, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(10, 189, 227, 0.1) 0%, transparent 50%);
+    animation: pulseGlow 8s ease-in-out infinite alternate;
+    z-index: 0;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    25% { background-position: 100% 50%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 50% 100%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes pulseGlow {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.8; }
+}
+
+.fiborti-main-container {
+    position: relative;
+    z-index: 10;
+    height: 100vh;
+}
+
+.fiborti-background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.fiborti-logo-container {
+    animation: fadeInUp 1.5s ease-out;
+}
+
+.fiborti-logo {
+    font-size: 5rem;
+    font-weight: 300;
+    color: white;
+    letter-spacing: -2px;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.fiborti-tagline {
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 8px;
+    text-align: center;
+    font-weight: 300;
+}
+
+.fiborti-coming-soon {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 2rem;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(45deg, #fff, #e3f2fd);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: pulse 2s ease-in-out infinite alternate, fadeInUp 1.5s ease-out 0.3s both;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+}
+
+.fiborti-description {
+    font-size: 1.4rem;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 3rem;
+    line-height: 1.6;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    animation: fadeInUp 1.5s ease-out 0.3s both;
+}
+
+.fiborti-countdown-container {
+    margin-bottom: 3rem;
+    animation: fadeInUp 1.5s ease-out 0.6s both;
+}
+
+.fiborti-countdown-item {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 15px;
+    padding: 1.5rem;
+    min-width: 80px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin: 0.5rem;
+}
+
+.fiborti-countdown-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.fiborti-countdown-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    display: block;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.fiborti-countdown-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 0.5rem;
+}
+
+.fiborti-notify-form {
+    animation: fadeInUp 1.5s ease-out 0.9s both;
+    max-width: 400px;
+}
+
+.fiborti-email-input {
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(15px);
+    color: white;
+    font-size: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.fiborti-email-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.fiborti-email-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: none;
+}
+
+.fiborti-notify-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.fiborti-notify-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(238, 90, 36, 0.6);
+}
+
+.fiborti-footer-info {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fadeInUp 1.5s ease-out 1.2s both;
+    margin-top: 2rem;
+}
+
+.fiborti-floating-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.fiborti-particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    animation: float 20s infinite linear;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+@keyframes float {
+    0% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(0deg);
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100vh) rotate(360deg);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .fiborti-logo {
+        font-size: 3.5rem;
+    }
+    
+    .fiborti-tagline {
+        font-size: 1rem;
+        letter-spacing: 4px;
+    }
+
+    .fiborti-coming-soon {
+        font-size: 2.5rem;
+    }
+
+    .fiborti-description {
+        font-size: 1.1rem;
+    }
+
+    .fiborti-countdown-number {
+        font-size: 2rem;
+    }
+
+    .fiborti-countdown-item {
+        min-width: 60px;
+        padding: 1rem;
+        margin: 0.25rem;
+    }
+
+    .fiborti-footer-info {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .fiborti-notify-form {
+        max-width: 300px;
+    }
+}

@@ -9,12 +9,41 @@ function mi_tema_setup() {
 add_action('after_setup_theme', 'mi_tema_setup');
 
 function mi_tema_scripts() {
-    wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css');
-    wp_enqueue_style('theme-style', get_stylesheet_uri(), array('bootstrap-css'));
-    wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js', array(), '5.3.7', true);
+    // Bootstrap CSS desde CDN con fallback
+    wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css', array(), '5.3.7');
     
-    // Font Awesome para iconos
-    wp_enqueue_style('fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+    // Bootstrap Icons para iconos adicionales
+    wp_enqueue_style('bootstrap-icons', 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css', array(), '1.10.0');
+    
+    // Estilos del tema con ruta absoluta para mejor compatibilidad
+    wp_enqueue_style('theme-style', get_template_directory_uri() . '/style.css', array('bootstrap-css'), '1.0.0');
+    
+    // Estilos específicos para Fiborti Analytics (solo en la página principal)
+    if (is_home() || is_front_page()) {
+        wp_enqueue_style('fiborti-analytics-css', get_template_directory_uri() . '/fiborti-analytics.css', array('bootstrap-css', 'bootstrap-icons'), filemtime(get_template_directory() . '/fiborti-analytics.css'));
+    }
+    
+    // Bootstrap JS desde CDN
+    wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js', array('jquery'), '5.3.7', true);
+    
+    // Font Awesome para iconos con fallback
+    wp_enqueue_style('fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', array(), '6.0.0');
+    
+    // JavaScript específico para Fiborti Analytics (solo en la página principal)
+    if (is_home() || is_front_page()) {
+        $js_file_path = get_template_directory() . '/js/fiborti-analytics.js';
+        if (file_exists($js_file_path)) {
+            wp_enqueue_script('fiborti-analytics-js', get_template_directory_uri() . '/js/fiborti-analytics.js', array('jquery', 'bootstrap-js'), filemtime($js_file_path), true);
+        }
+    }
+    
+    // Agregar versión para cache busting en Hostinger
+    wp_enqueue_style('theme-custom', get_template_directory_uri() . '/style.css', array('bootstrap-css', 'fontawesome'), filemtime(get_template_directory() . '/style.css'));
+    
+    // Forzar recarga de estilos si hay problemas de caché (solo en modo debug)
+    if (WP_DEBUG === true) {
+        wp_enqueue_style('theme-debug', get_template_directory_uri() . '/style.css', array('bootstrap-css', 'fontawesome'), time());
+    }
 }
 add_action('wp_enqueue_scripts', 'mi_tema_scripts');
 
@@ -154,6 +183,34 @@ function mi_tema_log($message, $level = 'info') {
     }
 }
 
+// Función para debug de carga de estilos (solo en modo debug)
+function mi_tema_debug_estilos() {
+    if (WP_DEBUG === true && current_user_can('administrator')) {
+        $estilos_cargados = wp_styles()->done;
+        $scripts_cargados = wp_scripts()->done;
+        
+        echo "<!-- DEBUG ESTILOS CARGADOS: " . implode(', ', $estilos_cargados) . " -->\n";
+        echo "<!-- DEBUG SCRIPTS CARGADOS: " . implode(', ', $scripts_cargados) . " -->\n";
+        
+        // Verificar archivos críticos
+        $archivos_criticos = array(
+            'style.css' => get_template_directory() . '/style.css',
+            'calfiborti.js' => get_template_directory() . '/js/calfiborti.js',
+            'fiborti-analytics.css' => get_template_directory() . '/fiborti-analytics.css',
+            'fiborti-analytics.js' => get_template_directory() . '/js/fiborti-analytics.js'
+        );
+        
+        foreach ($archivos_criticos as $nombre => $ruta) {
+            if (file_exists($ruta)) {
+                echo "<!-- DEBUG: $nombre existe en $ruta -->\n";
+            } else {
+                echo "<!-- ERROR: $nombre NO existe en $ruta -->\n";
+            }
+        }
+    }
+}
+add_action('wp_footer', 'mi_tema_debug_estilos');
+
 // Agregar soporte para uploads de archivos adicionales (por si necesitas logos, etc.)
 function mi_tema_mime_types($mimes) {
     $mimes['svg'] = 'image/svg+xml';
@@ -187,6 +244,32 @@ function mi_tema_disable_chatbot() {
     wp_dequeue_style('fiborti-chatbot');
 }
 add_action('init', 'mi_tema_disable_chatbot');
+
+// Limpiar elementos de WordPress en la página principal de Fiborti Analytics
+function mi_tema_clean_fiborti_page() {
+    if (is_home() || is_front_page()) {
+        // Remover estilos de WordPress que no necesitamos
+        wp_dequeue_style('wp-block-library');
+        wp_dequeue_style('wp-block-library-theme');
+        wp_dequeue_style('wc-blocks-style');
+        wp_dequeue_style('global-styles');
+        wp_dequeue_style('classic-theme-styles');
+        
+        // Remover scripts de WordPress que no necesitamos
+        wp_dequeue_script('wp-embed');
+        wp_dequeue_script('comment-reply');
+        
+        // Ocultar la barra de administración
+        add_filter('show_admin_bar', '__return_false');
+        
+        // Remover meta tags innecesarios
+        remove_action('wp_head', 'wp_generator');
+        remove_action('wp_head', 'wlwmanifest_link');
+        remove_action('wp_head', 'rsd_link');
+        remove_action('wp_head', 'wp_shortlink_wp_head');
+    }
+}
+add_action('wp_enqueue_scripts', 'mi_tema_clean_fiborti_page', 100);
 
 // Agregar estilos adicionales para mejor integración
 function mi_tema_inline_styles() {
