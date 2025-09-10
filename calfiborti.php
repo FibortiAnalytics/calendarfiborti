@@ -129,6 +129,24 @@ get_header(); ?>
                                                                 <i class="fas fa-users me-1"></i> Calendario Fiborti (Equipo)
                                                             </label>
                                                         </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="colaboradores[]" id="maximiliano" value="Maximiliano">
+                                                            <label class="form-check-label" for="maximiliano">
+                                                                <i class="fas fa-user me-1"></i> Maximiliano
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="colaboradores[]" id="anthea" value="Anthea">
+                                                            <label class="form-check-label" for="anthea">
+                                                                <i class="fas fa-user me-1"></i> Anthea
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="colaboradores[]" id="mayte" value="Mayte">
+                                                            <label class="form-check-label" for="mayte">
+                                                                <i class="fas fa-user me-1"></i> Mayte
+                                                            </label>
+                                                        </div>
                                                     </div>
                                                     <small class="text-muted">Selecciona uno o múltiples colaboradores para consultar disponibilidad</small>
                                                     <div class="alert alert-info mt-2">
