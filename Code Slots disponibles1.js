@@ -12,14 +12,14 @@ console.log('Procesando calendarios para:', colaboradoresSeleccionados);
 console.log('Modalidad:', modalidad, 'Duración:', duracion);
 console.log('Total inputs recibidos:', allInputs.length);
 
-// Configurar horarios según modalidad
+// Configurar horarios según modalidad (RESPETANDO REGLAS ORIGINALES)
 let inicioLaboral, finLaboral;
 if (modalidad === 'presencial') {
-  inicioLaboral = 9;    // 9:00 AM (expandido)
-  finLaboral = 18;      // 6:00 PM (expandido)
+  inicioLaboral = 10;   // 10:00 AM (regla original)
+  finLaboral = 16.5;    // 4:30 PM (regla original)
 } else {
-  inicioLaboral = 8;    // 8:00 AM (expandido)
-  finLaboral = 19;      // 7:00 PM (expandido)
+  inicioLaboral = 9;    // 9:00 AM (regla original)
+  finLaboral = 17.5;    // 5:30 PM (regla original)
 }
 
 // Generar slots dinámicamente basándose en la disponibilidad real
