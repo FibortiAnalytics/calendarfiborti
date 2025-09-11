@@ -1,0 +1,1557 @@
+{
+  "name": "Calendar Fiborti v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fiborti-availability-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Max-Age",
+                "value": "3600"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        480
+      ],
+      "id": "4ad2b3b0-4ab5-4226-b3bb-c2fb67aa4052",
+      "name": "Webhook Llegada de datos Form WP1",
+      "webhookId": "3e96b5a8-31a2-4ba3-a41d-29322ea91d33"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos \nconst requestData = $node[\"Code extraer y validar\"].json;\nconst allInputs = $input.all();\n\nconst duracion = requestData.duracion || 30;\nconst fecha = requestData.fecha;\nconst modalidad = requestData.modalidad.toLowerCase();\nconst colaboradoresSeleccionados = requestData.colaboradores;\n\nconsole.log('=== INICIO DEBUG ===');\nconsole.log('Procesando calendarios para:', colaboradoresSeleccionados);\nconsole.log('Modalidad:', modalidad, 'Duración:', duracion);\nconsole.log('Total inputs recibidos:', allInputs.length);\n\n// Configurar horarios según modalidad\nlet inicioLaboral, finLaboral;\nif (modalidad === 'presencial') {\n  inicioLaboral = 10;   // 10:00 AM\n  finLaboral = 16.5;    // 4:30 PM\n} else {\n  inicioLaboral = 9;    // 9:00 AM  \n  finLaboral = 17.5;    // 5:30 PM\n}\n\n// Generar todos los slots posibles según duración + tiempo de buffer\nconst intervalos = duracion / 60; // Convertir minutos a horas decimales\n\n// Definir tiempo de buffer según modalidad\nlet tiempoBuffer = 0;\nif (modalidad === 'presencial') {\n  tiempoBuffer = 30; // 30 minutos para transporte\n} else {\n  tiempoBuffer = 15; // 15 minutos para descompresión\n}\n\nconst intervalosConBuffer = (duracion + tiempoBuffer) / 60; // Incluir buffer en el cálculo\nconst todosLosSlots = [];\n\nfor (let hora = inicioLaboral; hora <= finLaboral - intervalosConBuffer; hora += 0.5) {\n  const horaEntera = Math.floor(hora);\n  const minutos = (hora % 1) * 60;\n  const horaFin = hora + intervalosConBuffer;\n  const horaFinEntera = Math.floor(horaFin);\n  const minutosFin = (horaFin % 1) * 60;\n  \n  todosLosSlots.push({\n    horaDecimal: hora,\n    inicio: `${String(horaEntera).padStart(2,'0')}:${String(minutos).padStart(2,'0')}`,\n    fin: `${String(horaFinEntera).padStart(2,'0')}:${String(minutosFin).padStart(2,'0')}`,\n    duracionReal: duracion,\n    tiempoBuffer: tiempoBuffer,\n    duracionTotal: duracion + tiempoBuffer\n  });\n}\n\nconsole.log(`Slots generados: ${todosLosSlots.length}`);\n\n// CORREGIR: Procesar eventos de TODOS los calendarios\nconst todosLosEventos = [];\n\n// Procesar cada input (cada calendario)\nallInputs.forEach((inputItem, index) => {\n  console.log(`--- Procesando input ${index + 1} ---`);\n  \n  // Verificar si el input tiene datos\n  if (inputItem && inputItem.json) {\n    // Si es un array de eventos\n    if (Array.isArray(inputItem.json)) {\n      console.log(`Input ${index + 1} - Array con ${inputItem.json.length} eventos`);\n      inputItem.json.forEach(event => {\n        if (event.start && event.end) {\n          todosLosEventos.push(event);\n          console.log(`- Evento: ${event.summary || 'Sin título'} (${event.start.dateTime} - ${event.end.dateTime})`);\n        }\n      });\n    }\n    // Si es un evento único\n    else if (inputItem.json.start && inputItem.json.end) {\n      console.log(`Input ${index + 1} - Evento único`);\n      todosLosEventos.push(inputItem.json);\n      console.log(`- Evento: ${inputItem.json.summary || 'Sin título'}`);\n    }\n  } else {\n    console.log(`Input ${index + 1} - Sin datos o formato incorrecto`);\n  }\n});\n\nconsole.log(`=== EVENTOS COMBINADOS: ${todosLosEventos.length} ===`);\n\n// Encontrar slots ocupados por cualquier evento\nconst slotsOcupados = new Set();\n\ntodosLosEventos.forEach((event, index) => {\n  if (!event.start?.dateTime || !event.end?.dateTime) {\n    console.log(`Evento ${index + 1} sin horarios válidos`);\n    return;\n  }\n  \n  // Parsear horarios del evento\n  const startTime = event.start.dateTime;\n  const endTime = event.end.dateTime;\n  \n  const startHour = parseInt(startTime.substring(11, 13));\n  const startMin = parseInt(startTime.substring(14, 16));\n  const endHour = parseInt(endTime.substring(11, 13));\n  const endMin = parseInt(endTime.substring(14, 16));\n  \n  const eventoInicio = startHour + (startMin / 60);\n  const eventoFin = endHour + (endMin / 60);\n  \n// Marcar slots que se solapan con este evento (incluyendo buffer)\nlet slotsAfectados = 0;\ntodosLosSlots.forEach(slot => {\n  const slotFin = slot.horaDecimal + intervalosConBuffer;\n  \n  // Si hay solapamiento, marcar como ocupado\n  if (slot.horaDecimal < eventoFin && slotFin > eventoInicio) {\n    slotsOcupados.add(slot.inicio);\n    slotsAfectados++;\n  }\n});\n  \n  console.log(`  -> Afectó ${slotsAfectados} slots`);\n});\n\n// Filtrar solo slots disponibles (libres en TODOS los calendarios)\nconst slotsDisponibles = todosLosSlots.filter(slot => {\n  return !slotsOcupados.has(slot.inicio);\n});\n\nconsole.log(`=== RESULTADO FINAL ===`);\nconsole.log(`Slots ocupados: ${slotsOcupados.size}`);\nconsole.log(`Slots disponibles: ${slotsDisponibles.length}`);\nconsole.log('Slots ocupados detalle:', Array.from(slotsOcupados));\n\n// Respuesta estructurada para el frontend\nreturn [{\n  success: true,\n  colaboradores: colaboradoresSeleccionados,\n  fecha: fecha,\n  modalidad: modalidad,\n  duracion: duracion,\n  disponibilidad: slotsDisponibles.map(slot => {\n    // Calcular hora de fin REAL (sin buffer)\n    const horaFinReal = slot.horaDecimal + intervalos;\n    const horaFinRealEntera = Math.floor(horaFinReal);\n    const minutosFinReal = (horaFinReal % 1) * 60;\n    const horaFinRealFormateada = `${String(horaFinRealEntera).padStart(2,'0')}:${String(minutosFinReal).padStart(2,'0')}`;\n    \n    return {\n      hora_inicio: slot.inicio,\n      hora_fin: horaFinRealFormateada,  // ← SOLO duración real\n      disponible: true,\n      duracion: duracion,\n      tiempoBuffer: slot.tiempoBuffer,\n      duracionTotal: slot.duracionTotal,\n      tipoBuffer: modalidad === 'presencial' ? 'transporte' : 'descompresión'\n    };\n  }),\n  mensaje: slotsDisponibles.length > 0 \n    ? `Encontrados ${slotsDisponibles.length} horarios donde TODOS los colaboradores están disponibles`\n    : 'No se encontraron horarios donde todos los colaboradores estén disponibles simultáneamente',\n    debug: {\n        calendarios: colaboradoresSeleccionados,\n        inputsRecibidos: allInputs.length,\n        eventosTotal: todosLosEventos.length,\n        slotsOcupados: Array.from(slotsOcupados),\n        horarioLaboral: `${String(Math.floor(inicioLaboral)).padStart(2,'0')}:00 - ${String(Math.floor(finLaboral)).padStart(2,'0')}:${String((finLaboral % 1) * 60).padStart(2,'0')}`,\n        duracionSlot: `${duracion} minutos`,\n        tiempoBuffer: `${tiempoBuffer} minutos (${modalidad === 'presencial' ? 'transporte' : 'descompresión'})`,\n        duracionTotal: `${duracion + tiempoBuffer} minutos`,\n        modalidad: modalidad,\n        eventosDetalle: todosLosEventos.map(e => ({\n          titulo: e.summary || 'Sin título',\n          inicio: e.start?.dateTime,\n          fin: e.end?.dateTime\n        }))\n      }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        -288
+      ],
+      "id": "586bd774-5452-4206-b609-68443b13d817",
+      "name": "Code Slots disponibles1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2000,
+        480
+      ],
+      "id": "8901da53-48b1-48ca-bf69-4b0d3df47cca",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "danny.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "Danny Cen Fiborti"
+        },
+        "timeMin": "={{ $json.fecha }}T00:00:00.000Z",
+        "timeMax": "={{ $json.fecha }}T23:59:59.000Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        0
+      ],
+      "id": "d0297186-7cea-41ec-b28a-bdf45f241a6b",
+      "name": "Get many events Danny Cen1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "LNxifMexHpTzrLbw",
+          "name": "Calendar Danny Fiborti"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "agencia@fiborti.com",
+          "mode": "list",
+          "cachedResultName": "agencia@fiborti.com"
+        },
+        "timeMin": "={{ $json.fecha }}T00:00:00.000Z",
+        "timeMax": "={{ $json.fecha }}T23:59:59.000Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        -384
+      ],
+      "id": "94bca15e-107e-4d0f-87fb-d6e4d1b121e1",
+      "name": "Get many events Fiborti Agency1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "b2u1TF8oYkGhKL4w",
+          "name": "Connection Calendar Fiborti Agency"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "mauleon1119@gmail.com",
+          "mode": "list",
+          "cachedResultName": "mauleon1119@gmail.com"
+        },
+        "timeMin": "={{ $json.fecha }}T00:00:00.000Z",
+        "timeMax": "={{ $json.fecha }}T23:59:59.000Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        -192
+      ],
+      "id": "fd0bf2b0-4b30-42c4-b9bd-01013e76f7d1",
+      "name": "Get many events Mauricio1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "qd0hWwTbshF5lYPl",
+          "name": "Calendario Mauricio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "emilio.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "emilio.fiborti@gmail.com"
+        },
+        "timeMin": "={{ $json.fecha }}T00:00:00.000Z",
+        "timeMax": "={{ $json.fecha }}T23:59:59.000Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        192
+      ],
+      "id": "211361a8-2a2c-4895-8476-70772aeb69e0",
+      "name": "Get many events Emilio1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Ekun9Zy6a7TeAkNN",
+          "name": "Google Calendar account Emilio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "fernando.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "fernando.fiborti@gmail.com"
+        },
+        "timeMin": "={{ $json.fecha }}T00:00:00.000Z",
+        "timeMax": "={{ $json.fecha }}T23:59:59.000Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        384
+      ],
+      "id": "d03fed3e-c25c-45e6-bb8e-e921afe0495c",
+      "name": "Get many events Fernando1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "l1fpRaPPyCUdhtbT",
+          "name": "Fernando Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 8
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1104,
+        -384
+      ],
+      "id": "5bbd4801-f4dd-481c-b9ac-9cd9beb173bc",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer datos del webhook\nconst { action, modalidad, colaboradores, fecha, duracion, titulo, descripcion, email, asistente, hora_inicio, hora_fin } = $json.body;\n\n// Si es consulta de disponibilidad (tu código actual)\nif (action === 'consultar_disponibilidad') {\n  // Tu código actual aquí...\nconst colaboradoresMap = {\n  'Danny': 'danny.fiborti@gmail.com',\n  'Fiborti Team': 'agencia@fiborti.com',\n  'Mauricio': 'mauleon1119@gmail.com',\n  'Fernando': 'fernando.fiborti@gmail.com',\n  'Emilio': 'emilio.fiborti@gmail.com',\n  'Maximiliano': 'maximiliano.fiborti@gmail.com',\n  'Anthea': 'anthea.fiborti@gmail.com',\n  'Mayte': 'mayte.fiborti@gmail.com'\n};\n  \n  const calendarsToCheck = colaboradores.map(nombre => {\n    const calendarId = colaboradoresMap[nombre];\n    if (!calendarId) {\n      throw new Error(`Colaborador no reconocido: ${nombre}`);\n    }\n    return { nombre: nombre, calendarId: calendarId };\n  });\n\n  return {\n    action: action,\n    colaboradores: colaboradores,\n    calendarsToCheck: calendarsToCheck,\n    fecha: fecha,\n    duracion: parseInt(duracion),\n    modalidad: modalidad\n  };\n}\n\n// Si es agendamiento múltiple\nif (action === 'agendar_cita_multiple') {\nconst colaboradoresMap = {\n  'Danny': 'danny.fiborti@gmail.com',\n  'Fiborti Team': 'agencia@fiborti.com', \n  'Mauricio': 'mauleon1119@gmail.com',\n  'Fernando': 'fernando.fiborti@gmail.com',\n  'Emilio': 'emilio.fiborti@gmail.com',\n  'Maximiliano': 'maximiliano.fiborti@gmail.com',\n  'Anthea': 'anthea.fiborti@gmail.com',\n  'Mayte': 'mayte.fiborti@gmail.com'\n};\n  \n  const calendarsToCreate = colaboradores.map(nombre => {\n    const calendarId = colaboradoresMap[nombre];\n    if (!calendarId) {\n      throw new Error(`Colaborador no reconocido: ${nombre}`);\n    }\n    return { nombre: nombre, calendarId: calendarId };\n  });\n\n  return {\n    action: action,\n    colaboradores: colaboradores,\n    calendarsToCreate: calendarsToCreate,\n    fecha: fecha,\n    hora_inicio: hora_inicio,\n    hora_fin: hora_fin,\n    titulo: titulo || 'Reunión Fiborti',\n    descripcion: descripcion || '',\n    email: email,\n    asistente: asistente,\n    modalidad: modalidad\n  };\n}\n\nthrow new Error(`Acción no reconocida: ${action}`);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        480
+      ],
+      "id": "53c15c96-07ee-4d67-8439-f53288b10317",
+      "name": "Code extraer y validar"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4d33e564-1d58-4b19-86d9-f4e364f6897d",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "=consultar_disponibilidad",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        480
+      ],
+      "id": "c94e1966-b5da-4e80-aac5-d7f09c726261",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "danny.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "Danny Cen Fiborti"
+        },
+        "start": "={{ $json.fecha }}T{{ $json.hora_inicio }}:00-06:00",
+        "end": "={{ $json.fecha }}T{{ $json.hora_fin }}:00-06:00",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.email }}"
+          ],
+          "description": "={{ $json.descripcion }}  Organizador: {{ $json.asistente }} Email: {{ $json.email }} Modalidad: {{ $json.modalidad }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        576
+      ],
+      "id": "59970e4b-56e0-4cf4-be60-3a63b165d81c",
+      "name": "Create an event Danny",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "LNxifMexHpTzrLbw",
+          "name": "Calendar Danny Fiborti"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "agencia@fiborti.com",
+          "mode": "list",
+          "cachedResultName": "agencia@fiborti.com"
+        },
+        "start": "={{ $json.fecha }}T{{ $json.hora_inicio }}:00-06:00",
+        "end": "={{ $json.fecha }}T{{ $json.hora_fin }}:00-06:00",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.email }}"
+          ],
+          "description": "={{ $json.descripcion }}  Organizador: {{ $json.asistente }} Email: {{ $json.email }} Modalidad: {{ $json.modalidad }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        768
+      ],
+      "id": "db6d9ec0-1c6e-4c5c-906f-7a57f0fe290f",
+      "name": "Create an event Fiborti Agency",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "b2u1TF8oYkGhKL4w",
+          "name": "Connection Calendar Fiborti Agency"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "mauleon1119@gmail.com",
+          "mode": "list",
+          "cachedResultName": "mauleon1119@gmail.com"
+        },
+        "start": "={{ $json.fecha }}T{{ $json.hora_inicio }}:00-06:00",
+        "end": "={{ $json.fecha }}T{{ $json.hora_fin }}:00-06:00",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.email }}"
+          ],
+          "description": "={{ $json.descripcion }}  Organizador: {{ $json.asistente }} Email: {{ $json.email }} Modalidad: {{ $json.modalidad }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        960
+      ],
+      "id": "00cec19b-ba53-4720-8521-1501470f9155",
+      "name": "Create an event Mauricio",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "qd0hWwTbshF5lYPl",
+          "name": "Calendario Mauricio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "emilio.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "emilio.fiborti@gmail.com"
+        },
+        "start": "={{ $json.fecha }}T{{ $json.hora_inicio }}:00-06:00",
+        "end": "={{ $json.fecha }}T{{ $json.hora_fin }}:00-06:00",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.email }}"
+          ],
+          "description": "={{ $json.descripcion }}  Organizador: {{ $json.asistente }} Email: {{ $json.email }} Modalidad: {{ $json.modalidad }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        1152
+      ],
+      "id": "63d88e06-50a7-4e68-adf5-801c9ade5753",
+      "name": "Create an event Emilio",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Ekun9Zy6a7TeAkNN",
+          "name": "Google Calendar account Emilio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "fernando.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "fernando.fiborti@gmail.com"
+        },
+        "start": "={{ $json.fecha }}T{{ $json.hora_inicio }}:00-06:00",
+        "end": "={{ $json.fecha }}T{{ $json.hora_fin }}:00-06:00",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.email }}"
+          ],
+          "description": "={{ $json.descripcion }}  Organizador: {{ $json.asistente }} Email: {{ $json.email }} Modalidad: {{ $json.modalidad }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        1344
+      ],
+      "id": "9f2567bc-09e6-45e6-9f2d-45eecb2e5aa8",
+      "name": "Create an event Fernando",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "l1fpRaPPyCUdhtbT",
+          "name": "Fernando Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Procesar respuesta de creación de eventos\nconst eventos = $input.all();\nconst requestData = $node[\"Code extraer y validar\"].json;\n\nconst eventosCreados = eventos.filter(item => item.json && item.json.id).map(item => ({\n  calendar: item.json.organizer?.email || 'Desconocido',\n  eventId: item.json.id,\n  htmlLink: item.json.htmlLink\n}));\n\nreturn [{\n  success: true,\n  action: 'agendar_cita_multiple',\n  mensaje: `Cita agendada exitosamente en ${eventosCreados.length} calendarios`,\n  detalles: {\n    titulo: requestData.titulo,\n    fecha: requestData.fecha,\n    horario: `${requestData.hora_inicio} - ${requestData.hora_fin}`,\n    colaboradores: requestData.colaboradores,\n    modalidad: requestData.modalidad,\n    eventos_creados: eventosCreados.length,\n    calendarios: eventosCreados\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        1248
+      ],
+      "id": "2136af99-bd24-4385-a257-c21f572f9372",
+      "name": "Code respuesta agendamiento"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a13a3705-3fee-43cb-8b22-31a0474973f1",
+              "leftValue": "={{ $json.colaboradores.includes('Danny') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        576
+      ],
+      "id": "9ad23edc-dfbb-4ce4-95eb-1ebb6fd9b8da",
+      "name": "If1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a13a3705-3fee-43cb-8b22-31a0474973f1",
+              "leftValue": "={{ $json.colaboradores.includes('Fiborti Team') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        768
+      ],
+      "id": "30e6845f-60e7-4797-a4d7-e2663ff22e52",
+      "name": "If2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a13a3705-3fee-43cb-8b22-31a0474973f1",
+              "leftValue": "={{ $json.colaboradores.includes('Mauricio') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        960
+      ],
+      "id": "7d32ad7a-07e7-49a5-bdcb-7153a3c01ecb",
+      "name": "If3",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a13a3705-3fee-43cb-8b22-31a0474973f1",
+              "leftValue": "={{ $json.colaboradores.includes('Emilio') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1152
+      ],
+      "id": "23ef7121-dc28-4b02-be63-73c670d79111",
+      "name": "If4",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a13a3705-3fee-43cb-8b22-31a0474973f1",
+              "leftValue": "={{ $json.colaboradores.includes('Fernando') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1344
+      ],
+      "id": "51536fec-0821-40e4-9b0e-1ea939422491",
+      "name": "If5",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        1248
+      ],
+      "id": "57a56f4f-75c9-4c2d-8608-f842f8ae3bf6",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "maximiliano.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "maximiliano.fiborti@gmail.com"
+        },
+        "start": "={{ $json.fecha }}T{{ $json.hora_inicio }}:00-06:00",
+        "end": "={{ $json.fecha }}T{{ $json.hora_fin }}:00-06:00",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.email }}"
+          ],
+          "description": "={{ $json.descripcion }}  Organizador: {{ $json.asistente }} Email: {{ $json.email }} Modalidad: {{ $json.modalidad }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        1536
+      ],
+      "id": "00bef395-8ae2-43ed-a3b6-bd7a1b0f0c33",
+      "name": "Create an event Maximiliano",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "OhQU5nl02tStIzQz",
+          "name": "Google Calendar Maximiliano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a13a3705-3fee-43cb-8b22-31a0474973f1",
+              "leftValue": "={{ $json.colaboradores.includes('Maximiliano') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1536
+      ],
+      "id": "110f54f1-32e6-4c46-8bc6-084aca4f9dec",
+      "name": "If6",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "anthea.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "anthea.fiborti@gmail.com"
+        },
+        "start": "={{ $json.fecha }}T{{ $json.hora_inicio }}:00-06:00",
+        "end": "={{ $json.fecha }}T{{ $json.hora_fin }}:00-06:00",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.email }}"
+          ],
+          "description": "={{ $json.descripcion }}  Organizador: {{ $json.asistente }} Email: {{ $json.email }} Modalidad: {{ $json.modalidad }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        1728
+      ],
+      "id": "40eebd10-4d72-4d48-a22f-0e352665784f",
+      "name": "Create an event Anthea",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "iVN09nWLhgRPrt4P",
+          "name": "Google Calendar Anthea"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a13a3705-3fee-43cb-8b22-31a0474973f1",
+              "leftValue": "={{ $json.colaboradores.includes('Anthea') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1728
+      ],
+      "id": "76b72b70-334a-4207-a2e0-f6caf7edcc50",
+      "name": "If7",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "mayte.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "mayte.fiborti@gmail.com"
+        },
+        "start": "={{ $json.fecha }}T{{ $json.hora_inicio }}:00-06:00",
+        "end": "={{ $json.fecha }}T{{ $json.hora_fin }}:00-06:00",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.email }}"
+          ],
+          "description": "={{ $json.descripcion }}  Organizador: {{ $json.asistente }} Email: {{ $json.email }} Modalidad: {{ $json.modalidad }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        1920
+      ],
+      "id": "14935094-469c-417b-936f-146d0099f8ff",
+      "name": "Create an event Mayte",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "toolarvc4UGVWiK2",
+          "name": "Google Calendar Mayte"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a13a3705-3fee-43cb-8b22-31a0474973f1",
+              "leftValue": "={{ $json.colaboradores.includes('Mayte') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1920
+      ],
+      "id": "7a9c09c1-758b-4e9e-982a-360a42db0fb4",
+      "name": "If8",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "maximiliano.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "maximiliano.fiborti@gmail.com"
+        },
+        "timeMin": "={{ $json.fecha }}T00:00:00.000Z",
+        "timeMax": "={{ $json.fecha }}T23:59:59.000Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        -576
+      ],
+      "id": "52a53c2e-2cb8-4095-808b-7b651eca302d",
+      "name": "Get many events Maximiliano",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "OhQU5nl02tStIzQz",
+          "name": "Google Calendar Maximiliano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "anthea.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "anthea.fiborti@gmail.com"
+        },
+        "timeMin": "={{ $json.fecha }}T00:00:00.000Z",
+        "timeMax": "={{ $json.fecha }}T23:59:59.000Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        -768
+      ],
+      "id": "98d9914e-95e1-480b-9951-df1870f56bab",
+      "name": "Get many events Anthea",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "iVN09nWLhgRPrt4P",
+          "name": "Google Calendar Anthea"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "mayte.fiborti@gmail.com",
+          "mode": "list",
+          "cachedResultName": "mayte.fiborti@gmail.com"
+        },
+        "timeMin": "={{ $json.fecha }}T00:00:00.000Z",
+        "timeMax": "={{ $json.fecha }}T23:59:59.000Z",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        -960
+      ],
+      "id": "449b5bfb-3033-4979-a3ff-52688ee4cbe7",
+      "name": "Get many events Mayte",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "toolarvc4UGVWiK2",
+          "name": "Google Calendar Mayte"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos del nodo anterior\nconst requestData = $input.all()[0].json;\n\n// Calcular duración basándose en hora_inicio y hora_fin si no está definida\nlet duracion;\nif (requestData.duracion) {\n  duracion = parseInt(requestData.duracion);\n} else if (requestData.hora_inicio && requestData.hora_fin) {\n  // Calcular duración desde hora_inicio y hora_fin\n  const [horaIni, minIni] = requestData.hora_inicio.split(':').map(Number);\n  const [horaFin, minFin] = requestData.hora_fin.split(':').map(Number);\n  const inicioMinutos = horaIni * 60 + minIni;\n  const finMinutos = horaFin * 60 + minFin;\n  duracion = finMinutos - inicioMinutos;\n} else {\n  duracion = 30; // Default a 30 minutos\n}\n\n// Validar que tenemos los datos necesarios\nif (!requestData.hora_inicio) {\n  throw new Error('Datos faltantes: hora_inicio no está definido');\n}\n\n// Calcular hora de fin del evento principal\nconst horaInicio = requestData.hora_inicio;\nconst [hora, minutos] = horaInicio.split(':').map(Number);\n\n// Validar que la hora es válida\nif (isNaN(hora) || isNaN(minutos)) {\n  throw new Error(`Hora de inicio inválida: ${horaInicio}`);\n}\n\nconst inicioMinutos = hora * 60 + minutos;\nconst finMinutos = inicioMinutos + duracion;\nconst finHora = Math.floor(finMinutos / 60);\nconst finMin = finMinutos % 60;\nconst horaFin = `${String(finHora).padStart(2,'0')}:${String(finMin).padStart(2,'0')}`;\n\n// Calcular hora de inicio del buffer\nconst bufferMinutos = requestData.modalidad === 'presencial' ? 30 : 15;\nconst bufferFinMinutos = finMinutos + bufferMinutos;\nconst bufferFinHora = Math.floor(bufferFinMinutos / 60);\nconst bufferFinMin = bufferFinMinutos % 60;\nconst bufferHoraFin = `${String(bufferFinHora).padStart(2,'0')}:${String(bufferFinMin).padStart(2,'0')}`;\n\n// �� CONFIGURACIÓN DE TÍTULOS Y EMOJIS SEGÚN MODALIDAD\nconst esPresencial = requestData.modalidad === 'presencial';\n\n// Título del evento principal con modalidad\nconst emojiModalidad = esPresencial ? '🔴' : '🟡';\nconst textoModalidad = esPresencial ? '[Presencial]' : '[Remoto]';\nconst tituloPrincipal = `${emojiModalidad} ${textoModalidad} ${requestData.titulo}`;\n\n// Título del evento de buffer\nconst textoBuffer = esPresencial ? '[Trip 🚗]' : '[Descompress 🌿]';\nconst tituloBuffer = `${textoBuffer} ${horaFin}`;\n\n// Crear datos para el evento principal\nconst eventoPrincipal = {\n  ...requestData,\n  hora_fin: horaFin,\n  titulo: tituloPrincipal, // ← TÍTULO CON MODALIDAD\n  titulo_original: requestData.titulo,\n  es_evento_principal: true,\n  // �� COLOR DEL EVENTO (si Google Calendar lo soporta)\n  colorId: esPresencial ? '11' : '5' // 11=Rojo, 5=Amarillo\n};\n\n// Crear datos para el evento de buffer\nconst eventoBuffer = {\n  ...requestData,\n  hora_inicio: horaFin,\n  hora_fin: bufferHoraFin,\n  titulo: tituloBuffer, // ← TÍTULO CON TIPO DE BUFFER\n  descripcion: `Tiempo de ${esPresencial ? 'transporte' : 'descompresión'} - ${requestData.titulo}`,\n  es_evento_buffer: true,\n  // 🎨 COLOR DEL EVENTO DE BUFFER (verde para buffer)\n  colorId: '10' // 10=Verde\n};\n\n// Retornar ambos eventos\nreturn [\n  { json: eventoPrincipal },\n  { json: eventoBuffer }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        576
+      ],
+      "id": "620fd442-5023-4144-88be-b825d564d7d1",
+      "name": "Code procesar eventos Danny"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos del nodo anterior\nconst requestData = $input.all()[0].json;\n\n// Calcular duración basándose en hora_inicio y hora_fin si no está definida\nlet duracion;\nif (requestData.duracion) {\n  duracion = parseInt(requestData.duracion);\n} else if (requestData.hora_inicio && requestData.hora_fin) {\n  // Calcular duración desde hora_inicio y hora_fin\n  const [horaIni, minIni] = requestData.hora_inicio.split(':').map(Number);\n  const [horaFin, minFin] = requestData.hora_fin.split(':').map(Number);\n  const inicioMinutos = horaIni * 60 + minIni;\n  const finMinutos = horaFin * 60 + minFin;\n  duracion = finMinutos - inicioMinutos;\n} else {\n  duracion = 30; // Default a 30 minutos\n}\n\n// Validar que tenemos los datos necesarios\nif (!requestData.hora_inicio) {\n  throw new Error('Datos faltantes: hora_inicio no está definido');\n}\n\n// Calcular hora de fin del evento principal\nconst horaInicio = requestData.hora_inicio;\nconst [hora, minutos] = horaInicio.split(':').map(Number);\n\n// Validar que la hora es válida\nif (isNaN(hora) || isNaN(minutos)) {\n  throw new Error(`Hora de inicio inválida: ${horaInicio}`);\n}\n\nconst inicioMinutos = hora * 60 + minutos;\nconst finMinutos = inicioMinutos + duracion;\nconst finHora = Math.floor(finMinutos / 60);\nconst finMin = finMinutos % 60;\nconst horaFin = `${String(finHora).padStart(2,'0')}:${String(finMin).padStart(2,'0')}`;\n\n// Calcular hora de inicio del buffer\nconst bufferMinutos = requestData.modalidad === 'presencial' ? 30 : 15;\nconst bufferFinMinutos = finMinutos + bufferMinutos;\nconst bufferFinHora = Math.floor(bufferFinMinutos / 60);\nconst bufferFinMin = bufferFinMinutos % 60;\nconst bufferHoraFin = `${String(bufferFinHora).padStart(2,'0')}:${String(bufferFinMin).padStart(2,'0')}`;\n\n// �� CONFIGURACIÓN DE TÍTULOS Y EMOJIS SEGÚN MODALIDAD\nconst esPresencial = requestData.modalidad === 'presencial';\n\n// Título del evento principal con modalidad\nconst emojiModalidad = esPresencial ? '🔴' : '🟡';\nconst textoModalidad = esPresencial ? '[Presencial]' : '[Remoto]';\nconst tituloPrincipal = `${emojiModalidad} ${textoModalidad} ${requestData.titulo}`;\n\n// Título del evento de buffer\nconst textoBuffer = esPresencial ? '[Trip 🚗]' : '[Descompress 🌿]';\nconst tituloBuffer = `${textoBuffer} ${horaFin}`;\n\n// Crear datos para el evento principal\nconst eventoPrincipal = {\n  ...requestData,\n  hora_fin: horaFin,\n  titulo: tituloPrincipal, // ← TÍTULO CON MODALIDAD\n  titulo_original: requestData.titulo,\n  es_evento_principal: true,\n  // �� COLOR DEL EVENTO (si Google Calendar lo soporta)\n  colorId: esPresencial ? '11' : '5' // 11=Rojo, 5=Amarillo\n};\n\n// Crear datos para el evento de buffer\nconst eventoBuffer = {\n  ...requestData,\n  hora_inicio: horaFin,\n  hora_fin: bufferHoraFin,\n  titulo: tituloBuffer, // ← TÍTULO CON TIPO DE BUFFER\n  descripcion: `Tiempo de ${esPresencial ? 'transporte' : 'descompresión'} - ${requestData.titulo}`,\n  es_evento_buffer: true,\n  // 🎨 COLOR DEL EVENTO DE BUFFER (verde para buffer)\n  colorId: '10' // 10=Verde\n};\n\n// Retornar ambos eventos\nreturn [\n  { json: eventoPrincipal },\n  { json: eventoBuffer }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        768
+      ],
+      "id": "a4913e7e-f74b-4063-b750-fa743a362157",
+      "name": "Code procesar eventos agencia Fiborti"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos del nodo anterior\nconst requestData = $input.all()[0].json;\n\n// Calcular duración basándose en hora_inicio y hora_fin si no está definida\nlet duracion;\nif (requestData.duracion) {\n  duracion = parseInt(requestData.duracion);\n} else if (requestData.hora_inicio && requestData.hora_fin) {\n  // Calcular duración desde hora_inicio y hora_fin\n  const [horaIni, minIni] = requestData.hora_inicio.split(':').map(Number);\n  const [horaFin, minFin] = requestData.hora_fin.split(':').map(Number);\n  const inicioMinutos = horaIni * 60 + minIni;\n  const finMinutos = horaFin * 60 + minFin;\n  duracion = finMinutos - inicioMinutos;\n} else {\n  duracion = 30; // Default a 30 minutos\n}\n\n// Validar que tenemos los datos necesarios\nif (!requestData.hora_inicio) {\n  throw new Error('Datos faltantes: hora_inicio no está definido');\n}\n\n// Calcular hora de fin del evento principal\nconst horaInicio = requestData.hora_inicio;\nconst [hora, minutos] = horaInicio.split(':').map(Number);\n\n// Validar que la hora es válida\nif (isNaN(hora) || isNaN(minutos)) {\n  throw new Error(`Hora de inicio inválida: ${horaInicio}`);\n}\n\nconst inicioMinutos = hora * 60 + minutos;\nconst finMinutos = inicioMinutos + duracion;\nconst finHora = Math.floor(finMinutos / 60);\nconst finMin = finMinutos % 60;\nconst horaFin = `${String(finHora).padStart(2,'0')}:${String(finMin).padStart(2,'0')}`;\n\n// Calcular hora de inicio del buffer\nconst bufferMinutos = requestData.modalidad === 'presencial' ? 30 : 15;\nconst bufferFinMinutos = finMinutos + bufferMinutos;\nconst bufferFinHora = Math.floor(bufferFinMinutos / 60);\nconst bufferFinMin = bufferFinMinutos % 60;\nconst bufferHoraFin = `${String(bufferFinHora).padStart(2,'0')}:${String(bufferFinMin).padStart(2,'0')}`;\n\n// �� CONFIGURACIÓN DE TÍTULOS Y EMOJIS SEGÚN MODALIDAD\nconst esPresencial = requestData.modalidad === 'presencial';\n\n// Título del evento principal con modalidad\nconst emojiModalidad = esPresencial ? '🔴' : '🟡';\nconst textoModalidad = esPresencial ? '[Presencial]' : '[Remoto]';\nconst tituloPrincipal = `${emojiModalidad} ${textoModalidad} ${requestData.titulo}`;\n\n// Título del evento de buffer\nconst textoBuffer = esPresencial ? '[Trip 🚗]' : '[Descompress 🌿]';\nconst tituloBuffer = `${textoBuffer} ${horaFin}`;\n\n// Crear datos para el evento principal\nconst eventoPrincipal = {\n  ...requestData,\n  hora_fin: horaFin,\n  titulo: tituloPrincipal, // ← TÍTULO CON MODALIDAD\n  titulo_original: requestData.titulo,\n  es_evento_principal: true,\n  // �� COLOR DEL EVENTO (si Google Calendar lo soporta)\n  colorId: esPresencial ? '11' : '5' // 11=Rojo, 5=Amarillo\n};\n\n// Crear datos para el evento de buffer\nconst eventoBuffer = {\n  ...requestData,\n  hora_inicio: horaFin,\n  hora_fin: bufferHoraFin,\n  titulo: tituloBuffer, // ← TÍTULO CON TIPO DE BUFFER\n  descripcion: `Tiempo de ${esPresencial ? 'transporte' : 'descompresión'} - ${requestData.titulo}`,\n  es_evento_buffer: true,\n  // 🎨 COLOR DEL EVENTO DE BUFFER (verde para buffer)\n  colorId: '10' // 10=Verde\n};\n\n// Retornar ambos eventos\nreturn [\n  { json: eventoPrincipal },\n  { json: eventoBuffer }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        960
+      ],
+      "id": "e557310a-bf55-4312-870b-5f38040880fb",
+      "name": "Code procesar eventos agencia Mauricio"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos del nodo anterior\nconst requestData = $input.all()[0].json;\n\n// Calcular duración basándose en hora_inicio y hora_fin si no está definida\nlet duracion;\nif (requestData.duracion) {\n  duracion = parseInt(requestData.duracion);\n} else if (requestData.hora_inicio && requestData.hora_fin) {\n  // Calcular duración desde hora_inicio y hora_fin\n  const [horaIni, minIni] = requestData.hora_inicio.split(':').map(Number);\n  const [horaFin, minFin] = requestData.hora_fin.split(':').map(Number);\n  const inicioMinutos = horaIni * 60 + minIni;\n  const finMinutos = horaFin * 60 + minFin;\n  duracion = finMinutos - inicioMinutos;\n} else {\n  duracion = 30; // Default a 30 minutos\n}\n\n// Validar que tenemos los datos necesarios\nif (!requestData.hora_inicio) {\n  throw new Error('Datos faltantes: hora_inicio no está definido');\n}\n\n// Calcular hora de fin del evento principal\nconst horaInicio = requestData.hora_inicio;\nconst [hora, minutos] = horaInicio.split(':').map(Number);\n\n// Validar que la hora es válida\nif (isNaN(hora) || isNaN(minutos)) {\n  throw new Error(`Hora de inicio inválida: ${horaInicio}`);\n}\n\nconst inicioMinutos = hora * 60 + minutos;\nconst finMinutos = inicioMinutos + duracion;\nconst finHora = Math.floor(finMinutos / 60);\nconst finMin = finMinutos % 60;\nconst horaFin = `${String(finHora).padStart(2,'0')}:${String(finMin).padStart(2,'0')}`;\n\n// Calcular hora de inicio del buffer\nconst bufferMinutos = requestData.modalidad === 'presencial' ? 30 : 15;\nconst bufferFinMinutos = finMinutos + bufferMinutos;\nconst bufferFinHora = Math.floor(bufferFinMinutos / 60);\nconst bufferFinMin = bufferFinMinutos % 60;\nconst bufferHoraFin = `${String(bufferFinHora).padStart(2,'0')}:${String(bufferFinMin).padStart(2,'0')}`;\n\n// �� CONFIGURACIÓN DE TÍTULOS Y EMOJIS SEGÚN MODALIDAD\nconst esPresencial = requestData.modalidad === 'presencial';\n\n// Título del evento principal con modalidad\nconst emojiModalidad = esPresencial ? '🔴' : '🟡';\nconst textoModalidad = esPresencial ? '[Presencial]' : '[Remoto]';\nconst tituloPrincipal = `${emojiModalidad} ${textoModalidad} ${requestData.titulo}`;\n\n// Título del evento de buffer\nconst textoBuffer = esPresencial ? '[Trip 🚗]' : '[Descompress 🌿]';\nconst tituloBuffer = `${textoBuffer} ${horaFin}`;\n\n// Crear datos para el evento principal\nconst eventoPrincipal = {\n  ...requestData,\n  hora_fin: horaFin,\n  titulo: tituloPrincipal, // ← TÍTULO CON MODALIDAD\n  titulo_original: requestData.titulo,\n  es_evento_principal: true,\n  // �� COLOR DEL EVENTO (si Google Calendar lo soporta)\n  colorId: esPresencial ? '11' : '5' // 11=Rojo, 5=Amarillo\n};\n\n// Crear datos para el evento de buffer\nconst eventoBuffer = {\n  ...requestData,\n  hora_inicio: horaFin,\n  hora_fin: bufferHoraFin,\n  titulo: tituloBuffer, // ← TÍTULO CON TIPO DE BUFFER\n  descripcion: `Tiempo de ${esPresencial ? 'transporte' : 'descompresión'} - ${requestData.titulo}`,\n  es_evento_buffer: true,\n  // 🎨 COLOR DEL EVENTO DE BUFFER (verde para buffer)\n  colorId: '10' // 10=Verde\n};\n\n// Retornar ambos eventos\nreturn [\n  { json: eventoPrincipal },\n  { json: eventoBuffer }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        1152
+      ],
+      "id": "fd1e0a70-7b76-40f2-9fa2-6f6b33051d60",
+      "name": "Code procesar eventos agencia Emilio"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos del nodo anterior\nconst requestData = $input.all()[0].json;\n\n// Calcular duración basándose en hora_inicio y hora_fin si no está definida\nlet duracion;\nif (requestData.duracion) {\n  duracion = parseInt(requestData.duracion);\n} else if (requestData.hora_inicio && requestData.hora_fin) {\n  // Calcular duración desde hora_inicio y hora_fin\n  const [horaIni, minIni] = requestData.hora_inicio.split(':').map(Number);\n  const [horaFin, minFin] = requestData.hora_fin.split(':').map(Number);\n  const inicioMinutos = horaIni * 60 + minIni;\n  const finMinutos = horaFin * 60 + minFin;\n  duracion = finMinutos - inicioMinutos;\n} else {\n  duracion = 30; // Default a 30 minutos\n}\n\n// Validar que tenemos los datos necesarios\nif (!requestData.hora_inicio) {\n  throw new Error('Datos faltantes: hora_inicio no está definido');\n}\n\n// Calcular hora de fin del evento principal\nconst horaInicio = requestData.hora_inicio;\nconst [hora, minutos] = horaInicio.split(':').map(Number);\n\n// Validar que la hora es válida\nif (isNaN(hora) || isNaN(minutos)) {\n  throw new Error(`Hora de inicio inválida: ${horaInicio}`);\n}\n\nconst inicioMinutos = hora * 60 + minutos;\nconst finMinutos = inicioMinutos + duracion;\nconst finHora = Math.floor(finMinutos / 60);\nconst finMin = finMinutos % 60;\nconst horaFin = `${String(finHora).padStart(2,'0')}:${String(finMin).padStart(2,'0')}`;\n\n// Calcular hora de inicio del buffer\nconst bufferMinutos = requestData.modalidad === 'presencial' ? 30 : 15;\nconst bufferFinMinutos = finMinutos + bufferMinutos;\nconst bufferFinHora = Math.floor(bufferFinMinutos / 60);\nconst bufferFinMin = bufferFinMinutos % 60;\nconst bufferHoraFin = `${String(bufferFinHora).padStart(2,'0')}:${String(bufferFinMin).padStart(2,'0')}`;\n\n// �� CONFIGURACIÓN DE TÍTULOS Y EMOJIS SEGÚN MODALIDAD\nconst esPresencial = requestData.modalidad === 'presencial';\n\n// Título del evento principal con modalidad\nconst emojiModalidad = esPresencial ? '🔴' : '🟡';\nconst textoModalidad = esPresencial ? '[Presencial]' : '[Remoto]';\nconst tituloPrincipal = `${emojiModalidad} ${textoModalidad} ${requestData.titulo}`;\n\n// Título del evento de buffer\nconst textoBuffer = esPresencial ? '[Trip 🚗]' : '[Descompress 🌿]';\nconst tituloBuffer = `${textoBuffer} ${horaFin}`;\n\n// Crear datos para el evento principal\nconst eventoPrincipal = {\n  ...requestData,\n  hora_fin: horaFin,\n  titulo: tituloPrincipal, // ← TÍTULO CON MODALIDAD\n  titulo_original: requestData.titulo,\n  es_evento_principal: true,\n  // �� COLOR DEL EVENTO (si Google Calendar lo soporta)\n  colorId: esPresencial ? '11' : '5' // 11=Rojo, 5=Amarillo\n};\n\n// Crear datos para el evento de buffer\nconst eventoBuffer = {\n  ...requestData,\n  hora_inicio: horaFin,\n  hora_fin: bufferHoraFin,\n  titulo: tituloBuffer, // ← TÍTULO CON TIPO DE BUFFER\n  descripcion: `Tiempo de ${esPresencial ? 'transporte' : 'descompresión'} - ${requestData.titulo}`,\n  es_evento_buffer: true,\n  // 🎨 COLOR DEL EVENTO DE BUFFER (verde para buffer)\n  colorId: '10' // 10=Verde\n};\n\n// Retornar ambos eventos\nreturn [\n  { json: eventoPrincipal },\n  { json: eventoBuffer }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        1344
+      ],
+      "id": "3dedcd3d-10ca-4ba3-b5b9-d6cbfb34e147",
+      "name": "Code procesar eventos agencia Fernando"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos del nodo anterior\nconst requestData = $input.all()[0].json;\n\n// Calcular duración basándose en hora_inicio y hora_fin si no está definida\nlet duracion;\nif (requestData.duracion) {\n  duracion = parseInt(requestData.duracion);\n} else if (requestData.hora_inicio && requestData.hora_fin) {\n  // Calcular duración desde hora_inicio y hora_fin\n  const [horaIni, minIni] = requestData.hora_inicio.split(':').map(Number);\n  const [horaFin, minFin] = requestData.hora_fin.split(':').map(Number);\n  const inicioMinutos = horaIni * 60 + minIni;\n  const finMinutos = horaFin * 60 + minFin;\n  duracion = finMinutos - inicioMinutos;\n} else {\n  duracion = 30; // Default a 30 minutos\n}\n\n// Validar que tenemos los datos necesarios\nif (!requestData.hora_inicio) {\n  throw new Error('Datos faltantes: hora_inicio no está definido');\n}\n\n// Calcular hora de fin del evento principal\nconst horaInicio = requestData.hora_inicio;\nconst [hora, minutos] = horaInicio.split(':').map(Number);\n\n// Validar que la hora es válida\nif (isNaN(hora) || isNaN(minutos)) {\n  throw new Error(`Hora de inicio inválida: ${horaInicio}`);\n}\n\nconst inicioMinutos = hora * 60 + minutos;\nconst finMinutos = inicioMinutos + duracion;\nconst finHora = Math.floor(finMinutos / 60);\nconst finMin = finMinutos % 60;\nconst horaFin = `${String(finHora).padStart(2,'0')}:${String(finMin).padStart(2,'0')}`;\n\n// Calcular hora de inicio del buffer\nconst bufferMinutos = requestData.modalidad === 'presencial' ? 30 : 15;\nconst bufferFinMinutos = finMinutos + bufferMinutos;\nconst bufferFinHora = Math.floor(bufferFinMinutos / 60);\nconst bufferFinMin = bufferFinMinutos % 60;\nconst bufferHoraFin = `${String(bufferFinHora).padStart(2,'0')}:${String(bufferFinMin).padStart(2,'0')}`;\n\n// �� CONFIGURACIÓN DE TÍTULOS Y EMOJIS SEGÚN MODALIDAD\nconst esPresencial = requestData.modalidad === 'presencial';\n\n// Título del evento principal con modalidad\nconst emojiModalidad = esPresencial ? '🔴' : '🟡';\nconst textoModalidad = esPresencial ? '[Presencial]' : '[Remoto]';\nconst tituloPrincipal = `${emojiModalidad} ${textoModalidad} ${requestData.titulo}`;\n\n// Título del evento de buffer\nconst textoBuffer = esPresencial ? '[Trip 🚗]' : '[Descompress 🌿]';\nconst tituloBuffer = `${textoBuffer} ${horaFin}`;\n\n// Crear datos para el evento principal\nconst eventoPrincipal = {\n  ...requestData,\n  hora_fin: horaFin,\n  titulo: tituloPrincipal, // ← TÍTULO CON MODALIDAD\n  titulo_original: requestData.titulo,\n  es_evento_principal: true,\n  // �� COLOR DEL EVENTO (si Google Calendar lo soporta)\n  colorId: esPresencial ? '11' : '5' // 11=Rojo, 5=Amarillo\n};\n\n// Crear datos para el evento de buffer\nconst eventoBuffer = {\n  ...requestData,\n  hora_inicio: horaFin,\n  hora_fin: bufferHoraFin,\n  titulo: tituloBuffer, // ← TÍTULO CON TIPO DE BUFFER\n  descripcion: `Tiempo de ${esPresencial ? 'transporte' : 'descompresión'} - ${requestData.titulo}`,\n  es_evento_buffer: true,\n  // 🎨 COLOR DEL EVENTO DE BUFFER (verde para buffer)\n  colorId: '10' // 10=Verde\n};\n\n// Retornar ambos eventos\nreturn [\n  { json: eventoPrincipal },\n  { json: eventoBuffer }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        1536
+      ],
+      "id": "1033afc6-1998-431b-a781-38c86ad0f2be",
+      "name": "Code procesar eventos agencia Maximiliano"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos del nodo anterior\nconst requestData = $input.all()[0].json;\n\n// Calcular duración basándose en hora_inicio y hora_fin si no está definida\nlet duracion;\nif (requestData.duracion) {\n  duracion = parseInt(requestData.duracion);\n} else if (requestData.hora_inicio && requestData.hora_fin) {\n  // Calcular duración desde hora_inicio y hora_fin\n  const [horaIni, minIni] = requestData.hora_inicio.split(':').map(Number);\n  const [horaFin, minFin] = requestData.hora_fin.split(':').map(Number);\n  const inicioMinutos = horaIni * 60 + minIni;\n  const finMinutos = horaFin * 60 + minFin;\n  duracion = finMinutos - inicioMinutos;\n} else {\n  duracion = 30; // Default a 30 minutos\n}\n\n// Validar que tenemos los datos necesarios\nif (!requestData.hora_inicio) {\n  throw new Error('Datos faltantes: hora_inicio no está definido');\n}\n\n// Calcular hora de fin del evento principal\nconst horaInicio = requestData.hora_inicio;\nconst [hora, minutos] = horaInicio.split(':').map(Number);\n\n// Validar que la hora es válida\nif (isNaN(hora) || isNaN(minutos)) {\n  throw new Error(`Hora de inicio inválida: ${horaInicio}`);\n}\n\nconst inicioMinutos = hora * 60 + minutos;\nconst finMinutos = inicioMinutos + duracion;\nconst finHora = Math.floor(finMinutos / 60);\nconst finMin = finMinutos % 60;\nconst horaFin = `${String(finHora).padStart(2,'0')}:${String(finMin).padStart(2,'0')}`;\n\n// Calcular hora de inicio del buffer\nconst bufferMinutos = requestData.modalidad === 'presencial' ? 30 : 15;\nconst bufferFinMinutos = finMinutos + bufferMinutos;\nconst bufferFinHora = Math.floor(bufferFinMinutos / 60);\nconst bufferFinMin = bufferFinMinutos % 60;\nconst bufferHoraFin = `${String(bufferFinHora).padStart(2,'0')}:${String(bufferFinMin).padStart(2,'0')}`;\n\n// �� CONFIGURACIÓN DE TÍTULOS Y EMOJIS SEGÚN MODALIDAD\nconst esPresencial = requestData.modalidad === 'presencial';\n\n// Título del evento principal con modalidad\nconst emojiModalidad = esPresencial ? '🔴' : '🟡';\nconst textoModalidad = esPresencial ? '[Presencial]' : '[Remoto]';\nconst tituloPrincipal = `${emojiModalidad} ${textoModalidad} ${requestData.titulo}`;\n\n// Título del evento de buffer\nconst textoBuffer = esPresencial ? '[Trip 🚗]' : '[Descompress 🌿]';\nconst tituloBuffer = `${textoBuffer} ${horaFin}`;\n\n// Crear datos para el evento principal\nconst eventoPrincipal = {\n  ...requestData,\n  hora_fin: horaFin,\n  titulo: tituloPrincipal, // ← TÍTULO CON MODALIDAD\n  titulo_original: requestData.titulo,\n  es_evento_principal: true,\n  // �� COLOR DEL EVENTO (si Google Calendar lo soporta)\n  colorId: esPresencial ? '11' : '5' // 11=Rojo, 5=Amarillo\n};\n\n// Crear datos para el evento de buffer\nconst eventoBuffer = {\n  ...requestData,\n  hora_inicio: horaFin,\n  hora_fin: bufferHoraFin,\n  titulo: tituloBuffer, // ← TÍTULO CON TIPO DE BUFFER\n  descripcion: `Tiempo de ${esPresencial ? 'transporte' : 'descompresión'} - ${requestData.titulo}`,\n  es_evento_buffer: true,\n  // 🎨 COLOR DEL EVENTO DE BUFFER (verde para buffer)\n  colorId: '10' // 10=Verde\n};\n\n// Retornar ambos eventos\nreturn [\n  { json: eventoPrincipal },\n  { json: eventoBuffer }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        1728
+      ],
+      "id": "9ac5eeb7-6c98-476f-8449-1c02147bb288",
+      "name": "Code procesar eventos agencia Anthea"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos del nodo anterior\nconst requestData = $input.all()[0].json;\n\n// Calcular duración basándose en hora_inicio y hora_fin si no está definida\nlet duracion;\nif (requestData.duracion) {\n  duracion = parseInt(requestData.duracion);\n} else if (requestData.hora_inicio && requestData.hora_fin) {\n  // Calcular duración desde hora_inicio y hora_fin\n  const [horaIni, minIni] = requestData.hora_inicio.split(':').map(Number);\n  const [horaFin, minFin] = requestData.hora_fin.split(':').map(Number);\n  const inicioMinutos = horaIni * 60 + minIni;\n  const finMinutos = horaFin * 60 + minFin;\n  duracion = finMinutos - inicioMinutos;\n} else {\n  duracion = 30; // Default a 30 minutos\n}\n\n// Validar que tenemos los datos necesarios\nif (!requestData.hora_inicio) {\n  throw new Error('Datos faltantes: hora_inicio no está definido');\n}\n\n// Calcular hora de fin del evento principal\nconst horaInicio = requestData.hora_inicio;\nconst [hora, minutos] = horaInicio.split(':').map(Number);\n\n// Validar que la hora es válida\nif (isNaN(hora) || isNaN(minutos)) {\n  throw new Error(`Hora de inicio inválida: ${horaInicio}`);\n}\n\nconst inicioMinutos = hora * 60 + minutos;\nconst finMinutos = inicioMinutos + duracion;\nconst finHora = Math.floor(finMinutos / 60);\nconst finMin = finMinutos % 60;\nconst horaFin = `${String(finHora).padStart(2,'0')}:${String(finMin).padStart(2,'0')}`;\n\n// Calcular hora de inicio del buffer\nconst bufferMinutos = requestData.modalidad === 'presencial' ? 30 : 15;\nconst bufferFinMinutos = finMinutos + bufferMinutos;\nconst bufferFinHora = Math.floor(bufferFinMinutos / 60);\nconst bufferFinMin = bufferFinMinutos % 60;\nconst bufferHoraFin = `${String(bufferFinHora).padStart(2,'0')}:${String(bufferFinMin).padStart(2,'0')}`;\n\n// �� CONFIGURACIÓN DE TÍTULOS Y EMOJIS SEGÚN MODALIDAD\nconst esPresencial = requestData.modalidad === 'presencial';\n\n// Título del evento principal con modalidad\nconst emojiModalidad = esPresencial ? '🔴' : '🟡';\nconst textoModalidad = esPresencial ? '[Presencial]' : '[Remoto]';\nconst tituloPrincipal = `${emojiModalidad} ${textoModalidad} ${requestData.titulo}`;\n\n// Título del evento de buffer\nconst textoBuffer = esPresencial ? '[Trip 🚗]' : '[Descompress 🌿]';\nconst tituloBuffer = `${textoBuffer} ${horaFin}`;\n\n// Crear datos para el evento principal\nconst eventoPrincipal = {\n  ...requestData,\n  hora_fin: horaFin,\n  titulo: tituloPrincipal, // ← TÍTULO CON MODALIDAD\n  titulo_original: requestData.titulo,\n  es_evento_principal: true,\n  // �� COLOR DEL EVENTO (si Google Calendar lo soporta)\n  colorId: esPresencial ? '11' : '5' // 11=Rojo, 5=Amarillo\n};\n\n// Crear datos para el evento de buffer\nconst eventoBuffer = {\n  ...requestData,\n  hora_inicio: horaFin,\n  hora_fin: bufferHoraFin,\n  titulo: tituloBuffer, // ← TÍTULO CON TIPO DE BUFFER\n  descripcion: `Tiempo de ${esPresencial ? 'transporte' : 'descompresión'} - ${requestData.titulo}`,\n  es_evento_buffer: true,\n  // 🎨 COLOR DEL EVENTO DE BUFFER (verde para buffer)\n  colorId: '10' // 10=Verde\n};\n\n// Retornar ambos eventos\nreturn [\n  { json: eventoPrincipal },\n  { json: eventoBuffer }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        1920
+      ],
+      "id": "2054f025-837d-48ad-a77c-4091b2d739e7",
+      "name": "Code procesar eventos agencia Mayte"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Llegada de datos Form WP1": {
+      "main": [
+        [
+          {
+            "node": "Code extraer y validar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Slots disponibles1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events Danny Cen1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Get many events Fiborti Agency1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Get many events Mauricio1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Get many events Emilio1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Get many events Fernando1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code Slots disponibles1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code extraer y validar": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get many events Fiborti Agency1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many events Mauricio1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many events Emilio1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many events Fernando1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many events Maximiliano",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many events Anthea",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many events Mayte",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many events Danny Cen1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event Danny": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event Fiborti Agency": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event Mauricio": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event Emilio": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event Fernando": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code respuesta agendamiento": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code procesar eventos Danny",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Code procesar eventos agencia Fiborti",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Code procesar eventos agencia Fernando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code procesar eventos agencia Emilio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Code procesar eventos agencia Mauricio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Code respuesta agendamiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Code procesar eventos agencia Maximiliano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event Maximiliano": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Code procesar eventos agencia Anthea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event Anthea": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "Code procesar eventos agencia Mayte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event Mayte": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events Maximiliano": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get many events Anthea": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get many events Mayte": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code procesar eventos Danny": {
+      "main": [
+        [
+          {
+            "node": "Create an event Danny",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code procesar eventos agencia Fiborti": {
+      "main": [
+        [
+          {
+            "node": "Create an event Fiborti Agency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code procesar eventos agencia Mauricio": {
+      "main": [
+        [
+          {
+            "node": "Create an event Mauricio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code procesar eventos agencia Emilio": {
+      "main": [
+        [
+          {
+            "node": "Create an event Emilio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code procesar eventos agencia Fernando": {
+      "main": [
+        [
+          {
+            "node": "Create an event Fernando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code procesar eventos agencia Maximiliano": {
+      "main": [
+        [
+          {
+            "node": "Create an event Maximiliano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code procesar eventos agencia Anthea": {
+      "main": [
+        [
+          {
+            "node": "Create an event Anthea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code procesar eventos agencia Mayte": {
+      "main": [
+        [
+          {
+            "node": "Create an event Mayte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d25a3233-950e-4fbb-8320-c3b5f4a115cb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8bb72653025e5a2505549dfbfca3f4b7b3593ffd0268f18f9403d22b9b22008a"
+  },
+  "id": "e7YywzVXfy4AXCfN",
+  "tags": []
+}
