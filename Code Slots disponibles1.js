@@ -22,7 +22,7 @@ if (modalidad === 'presencial') {
   finLaboral = 19;      // 7:00 PM (expandido)
 }
 
-// Generar todos los slots posibles según duración + tiempo de buffer
+// Generar slots dinámicamente basándose en la disponibilidad real
 const intervalos = duracion / 60; // Convertir minutos a horas decimales
 
 // Definir tiempo de buffer según modalidad
@@ -34,28 +34,8 @@ if (modalidad === 'presencial') {
 }
 
 const intervalosConBuffer = (duracion + tiempoBuffer) / 60; // Incluir buffer en el cálculo
-const todosLosSlots = [];
 
-for (let hora = inicioLaboral; hora <= finLaboral - intervalosConBuffer; hora += 0.5) {
-  const horaEntera = Math.floor(hora);
-  const minutos = (hora % 1) * 60;
-  const horaFin = hora + intervalosConBuffer;
-  const horaFinEntera = Math.floor(horaFin);
-  const minutosFin = (horaFin % 1) * 60;
-  
-  todosLosSlots.push({
-    horaDecimal: hora,
-    inicio: `${String(horaEntera).padStart(2,'0')}:${String(minutos).padStart(2,'0')}`,
-    fin: `${String(horaFinEntera).padStart(2,'0')}:${String(minutosFin).padStart(2,'0')}`,
-    duracionReal: duracion,
-    tiempoBuffer: tiempoBuffer,
-    duracionTotal: duracion + tiempoBuffer
-  });
-}
-
-console.log(`Slots generados: ${todosLosSlots.length}`);
-
-// CORREGIR: Procesar eventos de TODOS los calendarios
+// Primero, procesar eventos de TODOS los calendarios para entender la disponibilidad
 const todosLosEventos = [];
 
 // Procesar cada input (cada calendario)
@@ -87,8 +67,8 @@ allInputs.forEach((inputItem, index) => {
 
 console.log(`=== EVENTOS COMBINADOS: ${todosLosEventos.length} ===`);
 
-// Encontrar slots ocupados por cualquier evento
-const slotsOcupados = new Set();
+// Crear un mapa de horarios ocupados para facilitar la búsqueda
+const horariosOcupados = new Map();
 
 todosLosEventos.forEach((event, index) => {
   if (!event.start?.dateTime || !event.end?.dateTime) {
@@ -108,30 +88,61 @@ todosLosEventos.forEach((event, index) => {
   const eventoInicio = startHour + (startMin / 60);
   const eventoFin = endHour + (endMin / 60);
   
-// Marcar slots que se solapan con este evento (incluyendo buffer)
-let slotsAfectados = 0;
-todosLosSlots.forEach(slot => {
-  const slotFin = slot.horaDecimal + intervalosConBuffer;
-  
-  // Si hay solapamiento, marcar como ocupado
-  if (slot.horaDecimal < eventoFin && slotFin > eventoInicio) {
-    slotsOcupados.add(slot.inicio);
-    slotsAfectados++;
+  // Marcar todos los intervalos de 30 minutos que están ocupados
+  for (let hora = Math.floor(eventoInicio * 2) / 2; hora < eventoFin; hora += 0.5) {
+    const horaKey = `${String(Math.floor(hora)).padStart(2,'0')}:${String((hora % 1) * 60).padStart(2,'0')}`;
+    horariosOcupados.set(horaKey, true);
   }
-});
   
-  console.log(`  -> Afectó ${slotsAfectados} slots`);
+  console.log(`  -> Evento de ${eventoInicio} a ${eventoFin} marcó horarios ocupados`);
 });
 
-// Filtrar solo slots disponibles (libres en TODOS los calendarios)
-const slotsDisponibles = todosLosSlots.filter(slot => {
-  return !slotsOcupados.has(slot.inicio);
-});
+// Ahora generar slots dinámicamente basándose en la disponibilidad real
+const todosLosSlots = [];
+
+for (let hora = inicioLaboral; hora <= finLaboral - intervalosConBuffer; hora += 0.5) {
+  const horaEntera = Math.floor(hora);
+  const minutos = (hora % 1) * 60;
+  const horaFin = hora + intervalosConBuffer;
+  const horaFinEntera = Math.floor(horaFin);
+  const minutosFin = (horaFin % 1) * 60;
+  
+  const horaKey = `${String(horaEntera).padStart(2,'0')}:${String(minutos).padStart(2,'0')}`;
+  
+  // Verificar si este slot está disponible (no ocupado)
+  let estaDisponible = true;
+  for (let checkHora = hora; checkHora < horaFin; checkHora += 0.5) {
+    const checkHoraEntera = Math.floor(checkHora);
+    const checkMinutos = (checkHora % 1) * 60;
+    const checkHoraKey = `${String(checkHoraEntera).padStart(2,'0')}:${String(checkMinutos).padStart(2,'0')}`;
+    
+    if (horariosOcupados.has(checkHoraKey)) {
+      estaDisponible = false;
+      break;
+    }
+  }
+  
+  // Solo agregar slots que estén realmente disponibles
+  if (estaDisponible) {
+    todosLosSlots.push({
+      horaDecimal: hora,
+      inicio: `${String(horaEntera).padStart(2,'0')}:${String(minutos).padStart(2,'0')}`,
+      fin: `${String(horaFinEntera).padStart(2,'0')}:${String(minutosFin).padStart(2,'0')}`,
+      duracionReal: duracion,
+      tiempoBuffer: tiempoBuffer,
+      duracionTotal: duracion + tiempoBuffer
+    });
+  }
+}
+
+console.log(`Slots generados dinámicamente: ${todosLosSlots.length}`);
+
+// Los slots ya están filtrados dinámicamente, no necesitamos filtrar más
+const slotsDisponibles = todosLosSlots;
 
 console.log(`=== RESULTADO FINAL ===`);
-console.log(`Slots ocupados: ${slotsOcupados.size}`);
 console.log(`Slots disponibles: ${slotsDisponibles.length}`);
-console.log('Slots ocupados detalle:', Array.from(slotsOcupados));
+console.log('Horarios ocupados detectados:', horariosOcupados.size);
 
 // Respuesta estructurada para el frontend
 return [{
