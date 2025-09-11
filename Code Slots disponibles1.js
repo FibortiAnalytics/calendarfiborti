@@ -175,7 +175,7 @@ return [{
         calendarios: colaboradoresSeleccionados,
         inputsRecibidos: allInputs.length,
         eventosTotal: todosLosEventos.length,
-        slotsOcupados: Array.from(slotsOcupados),
+        horariosOcupados: horariosOcupados.size,
         horarioLaboral: `${String(Math.floor(inicioLaboral)).padStart(2,'0')}:00 - ${String(Math.floor(finLaboral)).padStart(2,'0')}:${String((finLaboral % 1) * 60).padStart(2,'0')}`,
         duracionSlot: `${duracion} minutos`,
         tiempoBuffer: `${tiempoBuffer} minutos (${modalidad === 'presencial' ? 'transporte' : 'descompresión'})`,
