@@ -14,7 +14,8 @@ const EMAILS_VALIDOS = [
     'emilio.fiborti@gmail.com',
     'maximiliano.fiborti@gmail.com',
     'mayte.fiborti@gmail.com',
-    'anthea.fiborti@gmail.com'
+    'anthea.fiborti@gmail.com',
+    'dannyscen@gmail.com' // Email temporal para pruebas
 ];
 
 // Mapeo de emails a nombres de colaboradores
@@ -26,7 +27,8 @@ const EMAIL_TO_COLABORADOR = {
     'emilio.fiborti@gmail.com': 'Emilio',
     'maximiliano.fiborti@gmail.com': 'Maximiliano',
     'mayte.fiborti@gmail.com': 'Mayte',
-    'anthea.fiborti@gmail.com': 'Anthea'
+    'anthea.fiborti@gmail.com': 'Anthea',
+    'dannyscen@gmail.com': 'Danny (Pruebas)' // Email temporal para pruebas
 };
 
 // Mapeo especial para colaboradores que comparten emails pero tienen credenciales diferentes
